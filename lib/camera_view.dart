@@ -3,19 +3,27 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_mlkit_commons/google_mlkit_commons.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+import 'package:translation_app/translation_details.dart';
 
 class CameraView extends StatefulWidget {
-  CameraView(
+  const CameraView(
       {Key? key,
       required this.customPaint,
       required this.onImage,
+      required this.fromLang,
+      required this.targetLang,
+      required this.recognizer,
       this.onCameraFeedReady,
       this.onDetectorViewModeChanged,
       this.onCameraLensDirectionChanged,
       this.initialCameraLensDirection = CameraLensDirection.back})
       : super(key: key);
 
+  final TextRecognizer recognizer;
+  final TranslateLanguage fromLang;
+  final TranslateLanguage targetLang;
   final CustomPaint? customPaint;
   final Function(InputImage inputImage) onImage;
   final VoidCallback? onCameraFeedReady;
@@ -38,26 +46,106 @@ class _CameraViewState extends State<CameraView> {
   double _maxAvailableExposureOffset = 0.0;
   double _currentExposureOffset = 0.0;
   bool _changingCameraLens = false;
+  TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  final _cameraLensDirection = CameraLensDirection.back;
+  Image? image;
+  CustomPaint? _customPaint;
+  String? _text;
 
   @override
   void initState() {
     super.initState();
 
+    if (widget.recognizer != null) {
+      setState(() {
+        _textRecognizer = widget.recognizer;
+      });
+    }
+
     _initialize();
+  }
+
+  @override
+  void didUpdateWidget(covariant CameraView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.recognizer != oldWidget.recognizer) {
+      // Text prop has changed, update state (if needed) and rebuild
+      print("recognizerScript ${widget.recognizer.script}");
+
+      setState(() {
+        _textRecognizer = widget.recognizer;
+        // ... update state here ...
+      });
+    }
   }
 
   void _initialize() async {
     if (_cameras.isEmpty) {
       _cameras = await availableCameras();
     }
+
     for (var i = 0; i < _cameras.length; i++) {
       if (_cameras[i].lensDirection == widget.initialCameraLensDirection) {
         _cameraIndex = i;
         break;
       }
     }
+
     if (_cameraIndex != -1) {
       _startLiveFeed();
+    }
+  }
+
+  _takePicture() async {
+    if (_controller != null) {
+      if (widget.customPaint != null) {
+        final picture = await _controller?.takePicture();
+        if (picture == null) {
+          return;
+        }
+
+        final File imageFile = File(picture.path);
+
+        InputImage inputImage = InputImage.fromFilePath(imageFile.path);
+        final recognizedText = await _textRecognizer.processImage(inputImage);
+        List<Map<String, dynamic>> lst = [];
+        List<String> strings = [];
+
+        final TranslateLanguage sourceLang = widget.fromLang;
+        final TranslateLanguage targetLang = widget.targetLang;
+
+        final onDeviceTranslator =
+            OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
+
+        for (final textBlock in recognizedText.blocks) {
+          final String text = await onDeviceTranslator.translateText(textBlock.text);
+          lst.add({
+            "boundingBox": textBlock.boundingBox,
+            "cornerPoints": textBlock.cornerPoints,
+            "lines": textBlock.lines,
+            "text": text,
+            "recognizedLanguages": textBlock.recognizedLanguages
+          });
+
+          strings.add(text);
+        }
+
+        // final painter = TextRecognizerPainter(
+        //   lst,
+        //   inputImage.metadata!.size,
+        //   inputImage.metadata!.rotation,
+        //   _cameraLensDirection,
+        // );
+        // _customPaint = CustomPaint(painter: painter);
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => TranslationDetails(text: strings, image: imageFile)));
+        // _isBusy = false;
+        if (mounted) {
+          setState(() {});
+        }
+      }
     }
   }
 
@@ -76,6 +164,7 @@ class _CameraViewState extends State<CameraView> {
     if (_cameras.isEmpty) return Container();
     if (_controller == null) return Container();
     if (_controller?.value.isInitialized == false) return Container();
+
     return Container(
       color: Colors.black,
       child: Stack(
@@ -91,15 +180,33 @@ class _CameraViewState extends State<CameraView> {
                     child: widget.customPaint,
                   ),
           ),
-          _backButton(),
           _switchLiveCameraToggle(),
           _detectionViewModeToggle(),
           _zoomControl(),
           _exposureControl(),
+          _takePictureControl()
         ],
       ),
     );
   }
+
+  Widget _takePictureControl() => Positioned(
+        bottom: 16,
+        left: MediaQuery.of(context).size.width * 0.5 - 35,
+        child: SizedBox(
+          height: 80.0,
+          width: 80.0,
+          child: FloatingActionButton(
+            heroTag: Object(),
+            onPressed: () => _takePicture(),
+            backgroundColor: Colors.black54,
+            child: const Icon(
+              Icons.camera_alt_outlined,
+              size: 80,
+            ),
+          ),
+        ),
+      );
 
   Widget _backButton() => Positioned(
         top: 40,
@@ -120,7 +227,7 @@ class _CameraViewState extends State<CameraView> {
       );
 
   Widget _detectionViewModeToggle() => Positioned(
-        bottom: 8,
+        bottom: 126,
         left: 8,
         child: SizedBox(
           height: 50.0,
@@ -138,7 +245,7 @@ class _CameraViewState extends State<CameraView> {
       );
 
   Widget _switchLiveCameraToggle() => Positioned(
-        bottom: 8,
+        bottom: 126,
         right: 8,
         child: SizedBox(
           height: 50.0,
@@ -156,7 +263,7 @@ class _CameraViewState extends State<CameraView> {
       );
 
   Widget _zoomControl() => Positioned(
-        bottom: 16,
+        bottom: 130,
         left: 0,
         right: 0,
         child: Align(
@@ -319,6 +426,38 @@ class _CameraViewState extends State<CameraView> {
     DeviceOrientation.portraitDown: 180,
     DeviceOrientation.landscapeRight: 270,
   };
+
+  Future<InputImage?> _inputImageFromXFile(XFile imageFile) async {
+    // Read image bytes
+    final Uint8List bytes = await imageFile.readAsBytes();
+
+    // Get image dimensions
+    final image = await decodeImageFromList(bytes);
+    final width = image.width.toDouble();
+    final height = image.height.toDouble();
+
+    // Determine image format based on platform (heuristic approach)
+    InputImageFormat? format;
+    if (Platform.isAndroid) {
+      format = InputImageFormat.nv21; // Assuming NV21 for Android (common)
+    } else if (Platform.isIOS) {
+      format = InputImageFormat.bgra8888; // Assuming BGRA8888 for iOS (common)
+    } else {
+      // Handle other platforms or provide a more robust format detection
+      return null;
+    }
+
+    // Create InputImage from bytes and metadata
+    return InputImage.fromBytes(
+      bytes: bytes,
+      metadata: InputImageMetadata(
+        size: Size(width, height),
+        rotation: InputImageRotation.rotation0deg, // Assuming unknown rotation
+        format: format,
+        bytesPerRow: image.width, // Assuming bytesPerRow equals image width
+      ),
+    );
+  }
 
   InputImage? _inputImageFromCameraImage(CameraImage image) {
     if (_controller == null) return null;

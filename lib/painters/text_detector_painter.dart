@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 
 import 'coordinates_translator.dart';
 
@@ -16,46 +17,43 @@ class TextRecognizerPainter extends CustomPainter {
     this.cameraLensDirection,
   );
 
-  final RecognizedText recognizedText;
+  final List<Map<String, dynamic>> recognizedText;
   final Size imageSize;
   final InputImageRotation rotation;
   final CameraLensDirection cameraLensDirection;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0
-      ..color = Colors.lightGreenAccent;
+    final Paint paint = Paint();
 
-    final Paint background = Paint()..color = const Color(0x99000000);
+    final Paint background = Paint()..color = const Color.fromARGB(255, 255, 255, 255);
 
-    for (final textBlock in recognizedText.blocks) {
+    for (final textBlock in recognizedText) {
       final ParagraphBuilder builder = ParagraphBuilder(
-        ParagraphStyle(textAlign: TextAlign.left, fontSize: 12, textDirection: TextDirection.ltr),
+        ParagraphStyle(textAlign: TextAlign.left, fontSize: 8, textDirection: TextDirection.ltr),
       );
-      builder.pushStyle(ui.TextStyle(color: Colors.lightGreenAccent, background: background));
-      print("Recognized text:, ${textBlock.recognizedLanguages}");
+      builder.pushStyle(ui.TextStyle(color: Colors.black, background: background));
+      print("Recognized text:, ${textBlock["text"]}");
 
-      builder.addText(textBlock.text);
+      builder.addText(textBlock["text"]);
       builder.pop();
 
       final left = translateX(
-        textBlock.boundingBox.left,
+        textBlock["boundingBox"].left,
         size,
         imageSize,
         rotation,
         cameraLensDirection,
       );
       final top = translateY(
-        textBlock.boundingBox.top,
+        textBlock["boundingBox"].top,
         size,
         imageSize,
         rotation,
         cameraLensDirection,
       );
       final right = translateX(
-        textBlock.boundingBox.right,
+        textBlock["boundingBox"].right,
         size,
         imageSize,
         rotation,
@@ -75,7 +73,7 @@ class TextRecognizerPainter extends CustomPainter {
       // );
 
       final List<Offset> cornerPoints = <Offset>[];
-      for (final point in textBlock.cornerPoints) {
+      for (final point in textBlock["cornerPoints"]) {
         double x = translateX(
           point.x.toDouble(),
           size,

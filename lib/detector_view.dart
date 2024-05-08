@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:google_mlkit_commons/google_mlkit_commons.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 
 import 'camera_view.dart';
 import 'gallery_view.dart';
@@ -8,10 +9,13 @@ import 'gallery_view.dart';
 enum DetectorViewMode { liveFeed, gallery }
 
 class DetectorView extends StatefulWidget {
-  DetectorView({
+  const DetectorView({
     Key? key,
     required this.title,
     required this.onImage,
+    required this.fromLang,
+    required this.targetLang,
+    required this.recognizer,
     this.customPaint,
     this.text,
     this.initialDetectionMode = DetectorViewMode.liveFeed,
@@ -21,6 +25,9 @@ class DetectorView extends StatefulWidget {
     this.onCameraLensDirectionChanged,
   }) : super(key: key);
 
+  final TextRecognizer recognizer;
+  final TranslateLanguage fromLang;
+  final TranslateLanguage targetLang;
   final String title;
   final CustomPaint? customPaint;
   final String? text;
@@ -50,6 +57,9 @@ class _DetectorViewState extends State<DetectorView> {
         ? CameraView(
             customPaint: widget.customPaint,
             onImage: widget.onImage,
+            recognizer: widget.recognizer,
+            targetLang: widget.targetLang,
+            fromLang: widget.fromLang,
             onCameraFeedReady: widget.onCameraFeedReady,
             onDetectorViewModeChanged: _onDetectorViewModeChanged,
             initialCameraLensDirection: widget.initialCameraLensDirection,
@@ -58,6 +68,9 @@ class _DetectorViewState extends State<DetectorView> {
         : GalleryView(
             title: widget.title,
             text: widget.text,
+            recognizer: widget.recognizer,
+            targetLang: widget.targetLang,
+            fromLang: widget.fromLang,
             onImage: widget.onImage,
             onDetectorViewModeChanged: _onDetectorViewModeChanged);
   }

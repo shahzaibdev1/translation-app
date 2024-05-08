@@ -1,35 +1,124 @@
 import 'package:flutter/material.dart';
 import 'package:translation_app/TextRecognizer.dart';
 
-void main() {
-  runApp(MyApp());
-}
+/// Flutter code sample for [NavigationBar].
 
-class MyApp extends StatelessWidget {
+void main() => runApp(const NavigationBarApp());
+
+class NavigationBarApp extends StatelessWidget {
+  const NavigationBarApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(),
+      theme: ThemeData(useMaterial3: true),
+      home: const NavigationExample(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class NavigationExample extends StatefulWidget {
+  const NavigationExample({super.key});
+
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<NavigationExample> createState() => _NavigationExampleState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _NavigationExampleState extends State<NavigationExample> {
+  int currentPageIndex = 0;
+
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('Flutter Demo Home Page'),
+      bottomNavigationBar: NavigationBar(
+        onDestinationSelected: (int index) {
+          setState(() {
+            currentPageIndex = index;
+          });
+        },
+        indicatorColor: theme.colorScheme.primary.withAlpha(100),
+        selectedIndex: currentPageIndex,
+        destinations: <Widget>[
+          NavigationDestination(
+            selectedIcon: Image.asset(
+              "assets/images/text.png",
+              width: 24,
+              height: 24,
+            ),
+            icon: Image.asset("assets/images/text.png", width: 24, height: 24),
+            label: 'Text',
+          ),
+          const NavigationDestination(
+            selectedIcon: Icon(Icons.camera_alt),
+            icon: Icon(Icons.camera_alt_outlined),
+            label: 'Camera',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.messenger_outline_sharp),
+            selectedIcon: Icon(Icons.messenger_sharp),
+            label: 'Conversation',
+          ),
+        ],
+      ),
+      body: <Widget>[
+        /// Home page
+        Card(
+          shadowColor: Colors.transparent,
+          margin: const EdgeInsets.all(8.0),
+          child: SizedBox.expand(
+            child: Center(
+              child: Text(
+                'Home page',
+                style: theme.textTheme.titleLarge,
+              ),
+            ),
+          ),
         ),
-        body: TextRecognizerView());
+
+        /// Notifications page
+        const TextRecognizerView(),
+
+        /// Messages page
+        ListView.builder(
+          reverse: true,
+          itemCount: 2,
+          itemBuilder: (BuildContext context, int index) {
+            if (index == 0) {
+              return Align(
+                alignment: Alignment.centerRight,
+                child: Container(
+                  margin: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Text(
+                    'Hello',
+                    style: theme.textTheme.bodyLarge!.copyWith(color: theme.colorScheme.onPrimary),
+                  ),
+                ),
+              );
+            }
+            return Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                margin: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: Text(
+                  'Hi!',
+                  style: theme.textTheme.bodyLarge!.copyWith(color: theme.colorScheme.onPrimary),
+                ),
+              ),
+            );
+          },
+        ),
+      ][currentPageIndex],
+    );
   }
 }

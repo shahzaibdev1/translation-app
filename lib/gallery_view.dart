@@ -3,20 +3,27 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_mlkit_commons/google_mlkit_commons.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'utils.dart';
 
 class GalleryView extends StatefulWidget {
-  GalleryView(
+  const GalleryView(
       {Key? key,
       required this.title,
+      required this.recognizer,
+      required this.fromLang,
+      required this.targetLang,
       this.text,
       required this.onImage,
       required this.onDetectorViewModeChanged})
       : super(key: key);
 
+  final TextRecognizer recognizer;
+  final TranslateLanguage fromLang;
+  final TranslateLanguage targetLang;
   final String title;
   final String? text;
   final Function(InputImage inputImage) onImage;
@@ -45,7 +52,7 @@ class _GalleryViewState extends State<GalleryView> {
           title: Text(widget.title),
           actions: [
             Padding(
-              padding: EdgeInsets.only(right: 20.0),
+              padding: const EdgeInsets.only(right: 20.0),
               child: GestureDetector(
                 onTap: widget.onDetectorViewModeChanged,
                 child: Icon(
@@ -71,28 +78,28 @@ class _GalleryViewState extends State<GalleryView> {
                 ],
               ),
             )
-          : Icon(
+          : const Icon(
               Icons.image,
               size: 200,
             ),
       Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: ElevatedButton(
           onPressed: _getImageAsset,
-          child: Text('From Assets'),
+          child: const Text('From Assets'),
         ),
       ),
       Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: ElevatedButton(
-          child: Text('From Gallery'),
+          child: const Text('From Gallery'),
           onPressed: () => _getImage(ImageSource.gallery),
         ),
       ),
       Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: ElevatedButton(
-          child: Text('Take a picture'),
+          child: const Text('Take a picture'),
           onPressed: () => _getImage(ImageSource.camera),
         ),
       ),
@@ -109,6 +116,7 @@ class _GalleryViewState extends State<GalleryView> {
       _image = null;
       _path = null;
     });
+
     final pickedFile = await _imagePicker?.pickImage(source: source);
     if (pickedFile != null) {
       _processFile(pickedFile.path);
@@ -137,7 +145,7 @@ class _GalleryViewState extends State<GalleryView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'Select image',
                     style: TextStyle(fontSize: 20),
                   ),
@@ -163,7 +171,7 @@ class _GalleryViewState extends State<GalleryView> {
                     ),
                   ),
                   ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(), child: Text('Cancel')),
+                      onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
                 ],
               ),
             ),
