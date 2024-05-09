@@ -140,9 +140,6 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Camera"),
-      ),
       body: Stack(children: [
         DetectorView(
           title: 'Text Detector',
@@ -156,7 +153,7 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
           onCameraLensDirectionChanged: (value) => _cameraLensDirection = value,
         ),
         Positioned(
-            top: 20,
+            top: 110,
             left: 80,
             child: Row(
               children: [

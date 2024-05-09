@@ -165,29 +165,33 @@ class _CameraViewState extends State<CameraView> {
     if (_controller == null) return Container();
     if (_controller?.value.isInitialized == false) return Container();
 
-    return Container(
-      color: Colors.black,
-      child: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          Center(
-            child: _changingCameraLens
-                ? const Center(
-                    child: Text('Changing camera lens'),
-                  )
-                : CameraPreview(
-                    _controller!,
-                    child: widget.customPaint,
-                  ),
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text("Camera"),
+        ),
+        body: Container(
+          color: Colors.black,
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              Center(
+                child: _changingCameraLens
+                    ? const Center(
+                        child: Text('Changing camera lens'),
+                      )
+                    : CameraPreview(
+                        _controller!,
+                        child: widget.customPaint,
+                      ),
+              ),
+              _switchLiveCameraToggle(),
+              _detectionViewModeToggle(),
+              _zoomControl(),
+              _exposureControl(),
+              _takePictureControl()
+            ],
           ),
-          _switchLiveCameraToggle(),
-          _detectionViewModeToggle(),
-          _zoomControl(),
-          _exposureControl(),
-          _takePictureControl()
-        ],
-      ),
-    );
+        ));
   }
 
   Widget _takePictureControl() => Positioned(

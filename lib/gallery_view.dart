@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:translation_app/TextRecognizer.dart';
 
 import 'utils.dart';
 
@@ -37,6 +38,37 @@ class _GalleryViewState extends State<GalleryView> {
   File? _image;
   String? _path;
   ImagePicker? _imagePicker;
+  String text = "";
+
+  @override
+  void didUpdateWidget(GalleryView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    onUpdateWidget() async {
+      if ((widget.text != oldWidget.text ||
+              widget.fromLang != oldWidget.fromLang ||
+              widget.targetLang != oldWidget.targetLang) &&
+          widget.text != null) {
+        // Run your function here
+        if (widget.text != null) {
+          final TranslateLanguage sourceLang = widget.fromLang;
+          final TranslateLanguage targetLang = widget.targetLang;
+
+          final onDeviceTranslator =
+              OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
+
+          var translatedText = await onDeviceTranslator
+              .translateText(widget.text!.replaceFirst('Recognized text:', '').trim());
+          print("${translatedText} TranslatedText ${widget.text}");
+          setState(() {
+            text = translatedText;
+          });
+        }
+      }
+    }
+
+    onUpdateWidget();
+  }
 
   @override
   void initState() {
@@ -50,17 +82,13 @@ class _GalleryViewState extends State<GalleryView> {
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 20.0),
-              child: GestureDetector(
-                onTap: widget.onDetectorViewModeChanged,
-                child: Icon(
-                  Platform.isIOS ? Icons.camera_alt_outlined : Icons.camera,
-                ),
-              ),
+          leading: IconButton(
+            iconSize: 30,
+            icon: Icon(
+              Platform.isIOS ? Icons.arrow_back_ios_new_outlined : Icons.arrow_circle_left_outlined,
             ),
-          ],
+            onPressed: widget.onDetectorViewModeChanged,
+          ),
         ),
         body: _galleryBody());
   }
@@ -68,7 +96,8 @@ class _GalleryViewState extends State<GalleryView> {
   Widget _galleryBody() {
     return ListView(shrinkWrap: true, children: [
       _image != null
-          ? SizedBox(
+          ? Container(
+              margin: const EdgeInsets.only(top: 100),
               height: 400,
               width: 400,
               child: Stack(
@@ -78,17 +107,12 @@ class _GalleryViewState extends State<GalleryView> {
                 ],
               ),
             )
-          : const Icon(
-              Icons.image,
-              size: 200,
-            ),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: ElevatedButton(
-          onPressed: _getImageAsset,
-          child: const Text('From Assets'),
-        ),
-      ),
+          : Container(
+              margin: const EdgeInsets.only(top: 80),
+              child: const Icon(
+                Icons.image,
+                size: 200,
+              )),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: ElevatedButton(
@@ -96,17 +120,10 @@ class _GalleryViewState extends State<GalleryView> {
           onPressed: () => _getImage(ImageSource.gallery),
         ),
       ),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: ElevatedButton(
-          child: const Text('Take a picture'),
-          onPressed: () => _getImage(ImageSource.camera),
-        ),
-      ),
       if (_image != null)
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Text('${_path == null ? '' : 'Image path: $_path'}\n\n${widget.text ?? ''}'),
+          child: Text('Translated Text:\n\n$text'),
         ),
     ]);
   }
