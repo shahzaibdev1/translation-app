@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:translation_app/TextRecognizer.dart';
 import 'package:translation_app/conversation_screen/conversation_screen.dart';
+import 'package:translation_app/text_screen/text_screen.dart';
 
 /// Flutter code sample for [NavigationBar].
 
@@ -65,18 +66,7 @@ class _NavigationExampleState extends State<NavigationExample> {
       ),
       body: <Widget>[
         /// Home page
-        Card(
-          shadowColor: Colors.transparent,
-          margin: const EdgeInsets.all(8.0),
-          child: SizedBox.expand(
-            child: Center(
-              child: Text(
-                'Home page',
-                style: theme.textTheme.titleLarge,
-              ),
-            ),
-          ),
-        ),
+        const TextScreen(),
 
         /// Notifications page
         const TextRecognizerView(),
