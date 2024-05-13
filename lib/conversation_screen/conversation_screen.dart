@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+import 'package:path/path.dart';
+
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:translation_app/conversation_screen/pressable_badge.dart';
 
 class Conversation extends StatefulWidget {
   const Conversation({Key? key});
@@ -11,20 +16,156 @@ class Conversation extends StatefulWidget {
 class _ConversationState extends State<Conversation> {
   final TextEditingController chatTextController = TextEditingController();
   List<Map<String, String>> messages = [];
+  TranslateLanguage firstMan = TranslateLanguage.english;
+  TranslateLanguage secondMan = TranslateLanguage.spanish;
+  int currentMan = 1;
+  bool is1Listening = false;
+  bool is2Listening = false;
 
-  void handleChange() async {
-    String text = chatTextController.text;
+  final SpeechToText _speechToText = SpeechToText();
+  final SpeechToText _speechToText1 = SpeechToText();
 
-    final onDeviceTranslator = OnDeviceTranslator(
-        sourceLanguage: TranslateLanguage.english, targetLanguage: TranslateLanguage.urdu);
+  @override
+  void initState() {
+    super.initState();
+
+    _initSpeech();
+  }
+
+  /// This has to happen only once per app
+  void _initSpeech() async {
+    await _speechToText.initialize();
+
+    await _speechToText1.initialize();
+    setState(() {});
+  }
+
+  /// Each time to start a speech recognition session
+  void _startListening() async {
+    await _speechToText.listen(
+        onResult: _onSpeechResult,
+        listenOptions: SpeechListenOptions(partialResults: false, cancelOnError: true));
+
+    setState(() {
+      is1Listening = true;
+    });
+  }
+
+  /// Manually stop the active speech recognition session
+  /// Note that there are also timeouts that each platform enforces
+  /// and the SpeechToText plugin supports setting timeouts on the
+  /// listen method.
+  void _stopListening() async {
+    await _speechToText.stop();
+
+    setState(() {
+      is1Listening = false;
+    });
+  }
+
+  /// This is the callback that the SpeechToText plugin calls when
+  /// the platform returns recognized words.
+  void _onSpeechResult(SpeechRecognitionResult result) async {
+    print("This function runs");
+    if (result.recognizedWords == "") {
+      setState(() {
+        is1Listening = false;
+      });
+      return;
+    }
+
+    String text = result.recognizedWords;
+
+    final onDeviceTranslator =
+        OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
 
     final String translatedText = await onDeviceTranslator.translateText(text);
 
     setState(() {
-      messages.add({"text": text, "translatedText": translatedText});
-    });
+      messages.add(
+          {"text": result.recognizedWords, "translatedText": translatedText, "currentMan": "1"});
 
-    chatTextController.clear();
+      is1Listening = false;
+    });
+  }
+
+  /// Each time to start a speech recognition session
+  void _startListening1() async {
+    await _speechToText1.listen(
+        onResult: _onSpeechResult1,
+        listenOptions: SpeechListenOptions(partialResults: false, cancelOnError: true));
+
+    setState(() {
+      is2Listening = true;
+    });
+  }
+
+  /// Manually stop the active speech recognition session
+  /// Note that there are also timeouts that each platform enforces
+  /// and the SpeechToText plugin supports setting timeouts on the
+  /// listen method.
+  void _stopListening1() {
+    _speechToText1.stop();
+
+    setState(() {
+      is2Listening = false;
+    });
+  }
+
+  /// This is the callback that the SpeechToText plugin calls when
+  /// the platform returns recognized words.
+  void _onSpeechResult1(SpeechRecognitionResult result) async {
+    if (result.recognizedWords == "") {
+      setState(() {
+        is1Listening = false;
+      });
+      return;
+    }
+
+    String text = result.recognizedWords;
+
+    final onDeviceTranslator =
+        OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
+
+    final String translatedText = await onDeviceTranslator.translateText(text);
+
+    setState(() {
+      messages.add(
+          {"text": result.recognizedWords, "translatedText": translatedText, "currentMan": "2"});
+
+      is1Listening = false;
+    });
+  }
+
+  void handleChange() async {
+    print("This function runs");
+    String text = chatTextController.text;
+
+    if (currentMan == 1) {
+      final onDeviceTranslator =
+          OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
+
+      final String translatedText = await onDeviceTranslator.translateText(text);
+
+      setState(() {
+        messages.add(
+            {"text": text, "translatedText": translatedText, "currentMan": currentMan.toString()});
+      });
+
+      chatTextController.clear();
+    } else if (currentMan == 2) {
+      final onDeviceTranslator =
+          OnDeviceTranslator(sourceLanguage: secondMan, targetLanguage: firstMan);
+
+      final String translatedText = await onDeviceTranslator.translateText(text);
+
+      setState(() {
+        messages.add(
+            {"text": text, "translatedText": translatedText, "currentMan": currentMan.toString()});
+      });
+
+      chatTextController.clear();
+    }
 
     return;
   }
@@ -43,43 +184,100 @@ class _ConversationState extends State<Conversation> {
                 itemBuilder: (BuildContext context, int index) {
                   return Column(children: [
                     Align(
-                      alignment: Alignment.centerRight,
+                      alignment: messages[index]["currentMan"] == '1'
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
                       child: Container(
-                        margin: const EdgeInsets.all(8.0),
-                        padding: const EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Text(
-                          messages[index]["text"] != null ? messages[index]["text"]! : "",
-                          style: theme.textTheme.bodyLarge!
-                              .copyWith(color: theme.colorScheme.onPrimary),
-                        ),
-                      ),
+                          margin: const EdgeInsets.only(left: 8.0, right: 8, bottom: 12, top: 4),
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary,
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          child: Column(children: [
+                            Text(
+                                messages[index]["translatedText"] != null
+                                    ? messages[index]["text"]!
+                                    : "",
+                                style: theme.textTheme.bodyLarge!
+                                    .copyWith(color: theme.colorScheme.onPrimary.withOpacity(0.3))),
+                            // Divider(),
+                            // Spacer(),
+                            const SizedBox(height: 5),
+                            Text(
+                              messages[index]["translatedText"] != null
+                                  ? messages[index]["translatedText"]!
+                                  : "",
+                              style: theme.textTheme.bodyLarge!
+                                  .copyWith(color: theme.colorScheme.onPrimary),
+                            ),
+                          ])),
                     ),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.all(8.0),
-                        padding: const EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Text(
-                          messages[index]["translatedText"] != null
-                              ? messages[index]["translatedText"]!
-                              : "",
-                          style: theme.textTheme.bodyLarge!
-                              .copyWith(color: theme.colorScheme.onPrimary),
-                        ),
-                      ),
-                    )
+                    // Align(
+                    //   alignment: Alignment.centerLeft,
+                    //   child: Container(
+                    //     margin: const EdgeInsets.all(8.0),
+                    //     padding: const EdgeInsets.all(8.0),
+                    //     decoration: BoxDecoration(
+                    //       color: theme.colorScheme.primary,
+                    //       borderRadius: BorderRadius.circular(8.0),
+                    //     ),
+                    //     child: Text(
+                    //       messages[index]["translatedText"] != null
+                    //           ? messages[index]["translatedText"]!
+                    //           : "",
+                    //       style: theme.textTheme.bodyLarge!
+                    //           .copyWith(color: theme.colorScheme.onPrimary),
+                    //     ),
+                    //   ),
+                    // )
                   ]);
                 },
               ),
             ),
+            Container(
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
+                      children: [
+                        IconButton.filledTonal(
+                            onPressed:
+                                _speechToText.isNotListening ? _startListening : _stopListening,
+                            icon: _speechToText.isListening
+                                ? SizedBox(
+                                    width: 25,
+                                    height: 25,
+                                    child: CircularProgressIndicator(
+                                      color: theme.colorScheme.onPrimary,
+                                    ))
+                                : const Icon(Icons.mic),
+                            padding: const EdgeInsets.all(20)),
+                        const Divider(),
+                        _buildDropdown(),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        IconButton.filledTonal(
+                            onPressed:
+                                _speechToText1.isNotListening ? _startListening1 : _stopListening1,
+                            icon: _speechToText1.isListening
+                                ? SizedBox(
+                                    width: 25,
+                                    height: 25,
+                                    child: CircularProgressIndicator(
+                                      color: theme.colorScheme.onPrimary,
+                                    ))
+                                : const Icon(Icons.mic),
+                            padding: const EdgeInsets.all(20)),
+                        const Divider(),
+                        _buildToDropdown(),
+                      ],
+                    ),
+                  ],
+                )),
             Container(
               margin: const EdgeInsets.symmetric(vertical: 10),
               child: Row(
@@ -90,16 +288,23 @@ class _ConversationState extends State<Conversation> {
                       decoration: BoxDecoration(
                           border: Border.all(width: 1, color: Colors.black.withAlpha(100)),
                           borderRadius: BorderRadius.circular(6)),
-                      child: SizedBox(
-                          width: MediaQuery.of(context).size.width - 90,
-                          child: TextField(
-                            autofocus: true,
-                            controller: chatTextController,
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              labelText: "Enter your message",
-                            ),
-                          ))),
+                      child: Row(children: [
+                        SizedBox(
+                            width: MediaQuery.of(context).size.width - 105,
+                            child: TextField(
+                              autofocus: true,
+                              controller: chatTextController,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                labelText: "Enter your message",
+                              ),
+                            )),
+                        PressableBadge(
+                            text: currentMan.toString(),
+                            onPressed: () => currentMan == 1
+                                ? setState(() => currentMan = 2)
+                                : setState(() => currentMan = 1))
+                      ])),
                   IconButton(onPressed: handleChange, icon: const Icon(Icons.send))
                 ],
               ),
@@ -109,4 +314,56 @@ class _ConversationState extends State<Conversation> {
       ),
     );
   }
+
+  Widget _buildDropdown() => DropdownButton<TranslateLanguage>(
+        value: firstMan,
+        icon: const Icon(Icons.arrow_downward),
+        elevation: 16,
+        style: const TextStyle(color: Colors.blue),
+        underline: Container(
+          height: 2,
+          color: Colors.blue,
+        ),
+        onChanged: (TranslateLanguage? script) {
+          if (script != null) {
+            setState(() {
+              firstMan = script;
+            });
+          }
+        },
+        items: TranslateLanguage.values.map<DropdownMenuItem<TranslateLanguage>>((script) {
+          return DropdownMenuItem<TranslateLanguage>(
+            value: script,
+            child: Text(script.name.isNotEmpty
+                ? script.name[0].toUpperCase() + script.name.substring(1)
+                : script.name),
+          );
+        }).toList(),
+      );
+
+  Widget _buildToDropdown() => DropdownButton<TranslateLanguage>(
+        value: secondMan,
+        icon: const Icon(Icons.arrow_downward),
+        elevation: 16,
+        style: const TextStyle(color: Colors.blue),
+        underline: Container(
+          height: 2,
+          color: Colors.blue,
+        ),
+        onChanged: (TranslateLanguage? script) {
+          if (script != null) {
+            setState(() {
+              secondMan = script;
+            });
+          }
+        },
+        items: TranslateLanguage.values.map<DropdownMenuItem<TranslateLanguage>>((script) {
+          return DropdownMenuItem<TranslateLanguage>(
+            value: script,
+            child: Text(script.name.isNotEmpty
+                ? script.name[0].toUpperCase() + script.name.substring(1)
+                : script.name),
+          );
+        }).toList(),
+      );
 }

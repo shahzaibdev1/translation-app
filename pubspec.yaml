@@ -44,6 +44,12 @@ dependencies:
 
   path: any
   speech_to_text: ^6.6.1
+  provider: ^6.1.2
+  google_mlkit_commons: ^0.6.1
+  flutter_tts: ^4.0.2
+  flutter_svg: ^2.0.10+1
+  share_plus: ^9.0.0
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
