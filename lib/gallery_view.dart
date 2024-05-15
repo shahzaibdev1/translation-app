@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:translation_app/TextRecognizer.dart';
 
 import 'utils.dart';
 
@@ -59,7 +58,7 @@ class _GalleryViewState extends State<GalleryView> {
 
           var translatedText = await onDeviceTranslator
               .translateText(widget.text!.replaceFirst('Recognized text:', '').trim());
-          print("${translatedText} TranslatedText ${widget.text}");
+          print("$translatedText TranslatedText ${widget.text}");
           setState(() {
             text = translatedText;
           });

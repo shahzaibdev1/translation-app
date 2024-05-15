@@ -25,6 +25,7 @@ class _TextScreenState extends State<TextScreen> {
   bool _speechEnabled = false;
   String _lastWords = '';
   final FlutterTts _flutterTts = FlutterTts();
+  bool isTextEmpty = true;
 
   @override
   void initState() {
@@ -66,8 +67,8 @@ class _TextScreenState extends State<TextScreen> {
   void translateText() async {
     String text = inputFieldController.text;
 
-    final onDeviceTranslator =
-        OnDeviceTranslator(sourceLanguage: _selectedFromLang, targetLanguage: _selectedToLang);
+    final onDeviceTranslator = OnDeviceTranslator(
+        sourceLanguage: _selectedFromLang, targetLanguage: _selectedToLang);
 
     final String translatedText = await onDeviceTranslator.translateText(text);
 
@@ -77,7 +78,8 @@ class _TextScreenState extends State<TextScreen> {
   }
 
   void _start_speaking(text) {
-    _flutterTts.setLanguage(_selectedToLang.name);
+    print(_selectedToLang.name);
+    _flutterTts.setLanguage(_selectedToLang.bcpCode);
     _flutterTts.speak(text);
   }
 
@@ -96,6 +98,7 @@ class _TextScreenState extends State<TextScreen> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    print("${inputFieldController.value.text} value.text");
 
     return Scaffold(
         drawer: Drawer(
@@ -105,7 +108,8 @@ class _TextScreenState extends State<TextScreen> {
               title: Text(Provider.of<ThemeProvider>(context).isDarkMode
                   ? "Use light theme"
                   : "Use dark theme"),
-              onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
+              onTap: () => Provider.of<ThemeProvider>(context, listen: false)
+                  .toggleTheme(),
             )
           ])),
         ),
@@ -117,7 +121,8 @@ class _TextScreenState extends State<TextScreen> {
               child: Column(
             children: [
               Card(
-                  margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                   child: Column(children: [
                     Container(
                         margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -140,47 +145,64 @@ class _TextScreenState extends State<TextScreen> {
                           border: InputBorder.none,
                           labelText: "Enter text here",
                         ),
+                        onChanged: (value) {
+                          setState(() {
+                            isTextEmpty = value.isEmpty;
+                          });
+                        },
                       ),
                     ),
                     Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
                         child: Row(
                           mainAxisAlignment: inputFieldController.text != ""
                               ? MainAxisAlignment.spaceBetween
                               : MainAxisAlignment.end,
                           children: [
-                            inputFieldController.text != ""
-                                ? IconButton.filled(
-                                    onPressed: () => _start_speaking(inputFieldController.text),
-                                    icon: SvgPicture.asset(
-                                      "assets/images/speak.svg",
-                                      colorFilter: ColorFilter.mode(
-                                          theme.colorScheme.onPrimary, BlendMode.srcIn),
-                                    ))
-                                : const SizedBox.shrink(),
-                            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                              IconButton.filled(
-                                  onPressed: _speechToText.isNotListening
-                                      ? _startListening
-                                      : _stopListening,
-                                  icon: _speechToText.isListening
-                                      ? SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            color: theme.colorScheme.onPrimary,
-                                          ))
-                                      : const Icon(Icons.mic)),
-                              ElevatedButton(
-                                onPressed: () => translateText(),
-                                style: ButtonStyle(
-                                    backgroundColor:
-                                        MaterialStateProperty.all<Color>(theme.colorScheme.primary),
-                                    foregroundColor: MaterialStateProperty.all<Color>(
-                                        theme.colorScheme.onPrimary)),
-                                child: const Text("Translate"),
-                              )
-                            ])
+                            Visibility(
+                              // Use Visibility for conditional visibility
+                              visible: !isTextEmpty,
+                              child: IconButton.filled(
+                                onPressed: () =>
+                                    _start_speaking(inputFieldController.text),
+                                icon: SvgPicture.asset(
+                                  "assets/images/speak.svg",
+                                  colorFilter: ColorFilter.mode(
+                                    theme.colorScheme.onPrimary,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton.filled(
+                                      onPressed: _speechToText.isNotListening
+                                          ? _startListening
+                                          : _stopListening,
+                                      icon: _speechToText.isListening
+                                          ? SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                color:
+                                                    theme.colorScheme.onPrimary,
+                                              ))
+                                          : const Icon(Icons.mic)),
+                                  ElevatedButton(
+                                    onPressed: () => translateText(),
+                                    style: ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStateProperty.all<Color>(
+                                                theme.colorScheme.primary),
+                                        foregroundColor:
+                                            MaterialStateProperty.all<Color>(
+                                                theme.colorScheme.onPrimary)),
+                                    child: const Text("Translate"),
+                                  )
+                                ])
                           ],
                         ))
                   ])),
@@ -193,36 +215,43 @@ class _TextScreenState extends State<TextScreen> {
                       width: MediaQuery.of(context).size.width,
                       padding: const EdgeInsets.all(20),
                       child: SingleChildScrollView(
-                        child: Text(_translatedText == "" ? "Translated text" : _translatedText),
+                        child: Text(_translatedText == ""
+                            ? "Translated text"
+                            : _translatedText),
                       ),
                     ),
                     Container(
-                        margin: const EdgeInsets.only(left: 10, right: 10, bottom: 5),
-                        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                          _translatedText != ""
-                              ? IconButton.filled(
-                                  onPressed: () => _start_speaking(_translatedText),
-                                  icon: SvgPicture.asset(
-                                    "assets/images/speak.svg",
-                                    colorFilter: ColorFilter.mode(
-                                        theme.colorScheme.onPrimary, BlendMode.srcIn),
-                                  ))
-                              : const SizedBox.shrink(),
-                          Row(
+                        margin: const EdgeInsets.only(
+                            left: 10, right: 10, bottom: 5),
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              IconButton.filled(
-                                  onPressed: () {
-                                    copyText(_translatedText);
-                                  },
-                                  icon: const Icon(Icons.copy)),
-                              IconButton.filled(
-                                  onPressed: () {
-                                    share(_translatedText);
-                                  },
-                                  icon: const Icon(Icons.share))
-                            ],
-                          )
-                        ]))
+                              _translatedText != ""
+                                  ? IconButton.filled(
+                                      onPressed: () =>
+                                          _start_speaking(_translatedText),
+                                      icon: SvgPicture.asset(
+                                        "assets/images/speak.svg",
+                                        colorFilter: ColorFilter.mode(
+                                            theme.colorScheme.onPrimary,
+                                            BlendMode.srcIn),
+                                      ))
+                                  : const SizedBox.shrink(),
+                              Row(
+                                children: [
+                                  IconButton.filled(
+                                      onPressed: () {
+                                        copyText(_translatedText);
+                                      },
+                                      icon: const Icon(Icons.copy)),
+                                  IconButton.filled(
+                                      onPressed: () {
+                                        share(_translatedText);
+                                      },
+                                      icon: const Icon(Icons.share))
+                                ],
+                              )
+                            ]))
                   ],
                 ),
               )
@@ -247,7 +276,8 @@ class _TextScreenState extends State<TextScreen> {
             });
           }
         },
-        items: TranslateLanguage.values.map<DropdownMenuItem<TranslateLanguage>>((script) {
+        items: TranslateLanguage.values
+            .map<DropdownMenuItem<TranslateLanguage>>((script) {
           return DropdownMenuItem<TranslateLanguage>(
             value: script,
             child: Text(script.name.isNotEmpty
@@ -273,7 +303,8 @@ class _TextScreenState extends State<TextScreen> {
             });
           }
         },
-        items: TranslateLanguage.values.map<DropdownMenuItem<TranslateLanguage>>((script) {
+        items: TranslateLanguage.values
+            .map<DropdownMenuItem<TranslateLanguage>>((script) {
           return DropdownMenuItem<TranslateLanguage>(
             value: script,
             child: Text(script.name.isNotEmpty

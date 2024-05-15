@@ -56,12 +56,10 @@ class _CameraViewState extends State<CameraView> {
   void initState() {
     super.initState();
 
-    if (widget.recognizer != null) {
-      setState(() {
-        _textRecognizer = widget.recognizer;
-      });
-    }
-
+    setState(() {
+      _textRecognizer = widget.recognizer;
+    });
+  
     _initialize();
   }
 

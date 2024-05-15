@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:google_mlkit_translation/google_mlkit_translation.dart';
-import 'package:path/path.dart';
 
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translation_app/conversation_screen/pressable_badge.dart';
 
 class Conversation extends StatefulWidget {
-  const Conversation({Key? key});
+  const Conversation({super.key});
 
   @override
   State<Conversation> createState() => _ConversationState();
@@ -15,12 +16,13 @@ class Conversation extends StatefulWidget {
 
 class _ConversationState extends State<Conversation> {
   final TextEditingController chatTextController = TextEditingController();
-  List<Map<String, String>> messages = [];
+  List<Map<String, dynamic>> messages = [];
   TranslateLanguage firstMan = TranslateLanguage.english;
   TranslateLanguage secondMan = TranslateLanguage.spanish;
   int currentMan = 1;
   bool is1Listening = false;
   bool is2Listening = false;
+  final FlutterTts _flutterTts = FlutterTts();
 
   final SpeechToText _speechToText = SpeechToText();
   final SpeechToText _speechToText1 = SpeechToText();
@@ -44,7 +46,8 @@ class _ConversationState extends State<Conversation> {
   void _startListening() async {
     await _speechToText.listen(
         onResult: _onSpeechResult,
-        listenOptions: SpeechListenOptions(partialResults: false, cancelOnError: true));
+        listenOptions:
+            SpeechListenOptions(partialResults: false, cancelOnError: true));
 
     setState(() {
       is1Listening = true;
@@ -66,7 +69,6 @@ class _ConversationState extends State<Conversation> {
   /// This is the callback that the SpeechToText plugin calls when
   /// the platform returns recognized words.
   void _onSpeechResult(SpeechRecognitionResult result) async {
-    print("This function runs");
     if (result.recognizedWords == "") {
       setState(() {
         is1Listening = false;
@@ -82,8 +84,13 @@ class _ConversationState extends State<Conversation> {
     final String translatedText = await onDeviceTranslator.translateText(text);
 
     setState(() {
-      messages.add(
-          {"text": result.recognizedWords, "translatedText": translatedText, "currentMan": "1"});
+      messages.add({
+        "text": result.recognizedWords,
+        "translatedText": translatedText,
+        "originLang": firstMan,
+        "targetLang": secondMan,
+        "currentMan": "1"
+      });
 
       is1Listening = false;
     });
@@ -93,7 +100,8 @@ class _ConversationState extends State<Conversation> {
   void _startListening1() async {
     await _speechToText1.listen(
         onResult: _onSpeechResult1,
-        listenOptions: SpeechListenOptions(partialResults: false, cancelOnError: true));
+        listenOptions:
+            SpeechListenOptions(partialResults: false, cancelOnError: true));
 
     setState(() {
       is2Listening = true;
@@ -130,44 +138,68 @@ class _ConversationState extends State<Conversation> {
     final String translatedText = await onDeviceTranslator.translateText(text);
 
     setState(() {
-      messages.add(
-          {"text": result.recognizedWords, "translatedText": translatedText, "currentMan": "2"});
+      messages.add({
+        "text": result.recognizedWords,
+        "translatedText": translatedText,
+        "currentMan": "2",
+        "originLang": firstMan,
+        "targetLang": secondMan,
+      });
 
       is1Listening = false;
     });
   }
 
   void handleChange() async {
-    print("This function runs");
     String text = chatTextController.text;
 
     if (currentMan == 1) {
-      final onDeviceTranslator =
-          OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
+      final onDeviceTranslator = OnDeviceTranslator(
+          sourceLanguage: firstMan, targetLanguage: secondMan);
 
-      final String translatedText = await onDeviceTranslator.translateText(text);
+      final String translatedText =
+          await onDeviceTranslator.translateText(text);
 
       setState(() {
-        messages.add(
-            {"text": text, "translatedText": translatedText, "currentMan": currentMan.toString()});
+        messages.add({
+          "text": text,
+          "translatedText": translatedText,
+          "currentMan": currentMan.toString(),
+          "originLang": firstMan,
+          "targetLang": secondMan,
+        });
       });
 
       chatTextController.clear();
     } else if (currentMan == 2) {
-      final onDeviceTranslator =
-          OnDeviceTranslator(sourceLanguage: secondMan, targetLanguage: firstMan);
+      final onDeviceTranslator = OnDeviceTranslator(
+          sourceLanguage: secondMan, targetLanguage: firstMan);
 
-      final String translatedText = await onDeviceTranslator.translateText(text);
+      final String translatedText =
+          await onDeviceTranslator.translateText(text);
 
       setState(() {
-        messages.add(
-            {"text": text, "translatedText": translatedText, "currentMan": currentMan.toString()});
+        messages.add({
+          "text": text,
+          "translatedText": translatedText,
+          "currentMan": currentMan.toString(),
+          "originLang": firstMan,
+          "targetLang": secondMan,
+        });
       });
 
       chatTextController.clear();
     }
 
     return;
+  }
+
+  void _start_speaking(String text, TranslateLanguage? lang) {
+    print(lang);
+    if (lang != null) {
+      _flutterTts.setLanguage(lang.bcpCode);
+    }
+    _flutterTts.speak(text);
   }
 
   @override
@@ -184,35 +216,76 @@ class _ConversationState extends State<Conversation> {
                 itemBuilder: (BuildContext context, int index) {
                   return Column(children: [
                     Align(
-                      alignment: messages[index]["currentMan"] == '1'
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                          margin: const EdgeInsets.only(left: 8.0, right: 8, bottom: 12, top: 4),
-                          padding: const EdgeInsets.all(8.0),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          child: Column(children: [
-                            Text(
-                                messages[index]["translatedText"] != null
-                                    ? messages[index]["text"]!
-                                    : "",
-                                style: theme.textTheme.bodyLarge!
-                                    .copyWith(color: theme.colorScheme.onPrimary.withOpacity(0.3))),
-                            // Divider(),
-                            // Spacer(),
-                            const SizedBox(height: 5),
-                            Text(
-                              messages[index]["translatedText"] != null
-                                  ? messages[index]["translatedText"]!
-                                  : "",
-                              style: theme.textTheme.bodyLarge!
-                                  .copyWith(color: theme.colorScheme.onPrimary),
-                            ),
-                          ])),
-                    ),
+                        alignment: messages[index]["currentMan"] == '1'
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Row(
+                            mainAxisAlignment:
+                                messages[index]["currentMan"] == '1'
+                                    ? MainAxisAlignment.end
+                                    : MainAxisAlignment.start,
+                            children: [
+                              messages[index]["currentMan"] == '1'
+                                  ? IconButton.filled(
+                                      onPressed: () => _start_speaking(
+                                          messages[index]["translatedText"],
+                                          messages[index]["targetLang"]),
+                                      icon: SvgPicture.asset(
+                                        "assets/images/speak.svg",
+                                        colorFilter: ColorFilter.mode(
+                                          theme.colorScheme.onPrimary,
+                                          BlendMode.srcIn,
+                                        ),
+                                      ),
+                                    )
+                                  : SizedBox.shrink(),
+                              Container(
+                                  margin: const EdgeInsets.only(
+                                      left: 8.0, right: 8, bottom: 12, top: 4),
+                                  padding: const EdgeInsets.all(8.0),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary,
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  child: Column(children: [
+                                    Text(
+                                        messages[index]["translatedText"] !=
+                                                null
+                                            ? messages[index]["text"]!
+                                            : "",
+                                        style: theme.textTheme.bodyLarge!
+                                            .copyWith(
+                                                color: theme
+                                                    .colorScheme.onPrimary
+                                                    .withOpacity(0.3))),
+                                    // Divider(),
+                                    // Spacer(),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      messages[index]["translatedText"] != null
+                                          ? messages[index]["translatedText"]!
+                                          : "",
+                                      style: theme.textTheme.bodyLarge!
+                                          .copyWith(
+                                              color:
+                                                  theme.colorScheme.onPrimary),
+                                    ),
+                                  ])),
+                              messages[index]["currentMan"] == '2'
+                                  ? IconButton.filled(
+                                      onPressed: () => _start_speaking(
+                                          messages[index]["translatedText"],
+                                          messages[index]["originLang"]),
+                                      icon: SvgPicture.asset(
+                                        "assets/images/speak.svg",
+                                        colorFilter: ColorFilter.mode(
+                                          theme.colorScheme.onPrimary,
+                                          BlendMode.srcIn,
+                                        ),
+                                      ),
+                                    )
+                                  : SizedBox.shrink(),
+                            ])),
                     // Align(
                     //   alignment: Alignment.centerLeft,
                     //   child: Container(
@@ -243,8 +316,9 @@ class _ConversationState extends State<Conversation> {
                     Column(
                       children: [
                         IconButton.filledTonal(
-                            onPressed:
-                                _speechToText.isNotListening ? _startListening : _stopListening,
+                            onPressed: _speechToText.isNotListening
+                                ? _startListening
+                                : _stopListening,
                             icon: _speechToText.isListening
                                 ? SizedBox(
                                     width: 25,
@@ -261,8 +335,9 @@ class _ConversationState extends State<Conversation> {
                     Column(
                       children: [
                         IconButton.filledTonal(
-                            onPressed:
-                                _speechToText1.isNotListening ? _startListening1 : _stopListening1,
+                            onPressed: _speechToText1.isNotListening
+                                ? _startListening1
+                                : _stopListening1,
                             icon: _speechToText1.isListening
                                 ? SizedBox(
                                     width: 25,
@@ -286,13 +361,13 @@ class _ConversationState extends State<Conversation> {
                       margin: const EdgeInsets.symmetric(horizontal: 10),
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
-                          border: Border.all(width: 1, color: Colors.black.withAlpha(100)),
+                          border: Border.all(
+                              width: 1, color: Colors.black.withAlpha(100)),
                           borderRadius: BorderRadius.circular(6)),
                       child: Row(children: [
                         SizedBox(
                             width: MediaQuery.of(context).size.width - 105,
                             child: TextField(
-                              autofocus: true,
                               controller: chatTextController,
                               decoration: const InputDecoration(
                                 border: InputBorder.none,
@@ -305,7 +380,8 @@ class _ConversationState extends State<Conversation> {
                                 ? setState(() => currentMan = 2)
                                 : setState(() => currentMan = 1))
                       ])),
-                  IconButton(onPressed: handleChange, icon: const Icon(Icons.send))
+                  IconButton(
+                      onPressed: handleChange, icon: const Icon(Icons.send))
                 ],
               ),
             ),
@@ -331,7 +407,8 @@ class _ConversationState extends State<Conversation> {
             });
           }
         },
-        items: TranslateLanguage.values.map<DropdownMenuItem<TranslateLanguage>>((script) {
+        items: TranslateLanguage.values
+            .map<DropdownMenuItem<TranslateLanguage>>((script) {
           return DropdownMenuItem<TranslateLanguage>(
             value: script,
             child: Text(script.name.isNotEmpty
@@ -357,7 +434,8 @@ class _ConversationState extends State<Conversation> {
             });
           }
         },
-        items: TranslateLanguage.values.map<DropdownMenuItem<TranslateLanguage>>((script) {
+        items: TranslateLanguage.values
+            .map<DropdownMenuItem<TranslateLanguage>>((script) {
           return DropdownMenuItem<TranslateLanguage>(
             value: script,
             child: Text(script.name.isNotEmpty
