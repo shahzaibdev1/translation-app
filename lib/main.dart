@@ -2,20 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:translation_app/TextRecognizer.dart';
 import 'package:translation_app/conversation_screen/conversation_screen.dart';
+import 'package:translation_app/providers/navigation_status.dart';
 import 'package:translation_app/providers/theme_provider.dart';
 import 'package:translation_app/text_screen/text_screen.dart';
 
 /// Flutter code sample for [NavigationBar].
 
-void main() =>
-    runApp(ChangeNotifierProvider(create: (_) => ThemeProvider(), child: const NavigationBarApp()));
+void main() => runApp(MultiProvider(providers: [
+      ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ChangeNotifierProvider(create: (_) => NavigationStatus()),
+    ], child: const NavigationBarApp()));
 
 class NavigationBarApp extends StatelessWidget {
   const NavigationBarApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
+    return Consumer2<ThemeProvider, NavigationStatus>(
+        builder: (context, themeProvider, navigationStatus, child) {
       return MaterialApp(
         theme: themeProvider.isDarkMode
             ? ThemeData.dark(useMaterial3: true)
@@ -34,8 +38,6 @@ class NavigationExample extends StatefulWidget {
 }
 
 class _NavigationExampleState extends State<NavigationExample> {
-  int currentPageIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -44,12 +46,10 @@ class _NavigationExampleState extends State<NavigationExample> {
       resizeToAvoidBottomInset: false,
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {
-          setState(() {
-            currentPageIndex = index;
-          });
+          Provider.of<NavigationStatus>(context, listen: false).changePageIndex(index);
         },
         indicatorColor: theme.colorScheme.primary,
-        selectedIndex: currentPageIndex,
+        selectedIndex: Provider.of<NavigationStatus>(context).currentPageIndex,
         destinations: <Widget>[
           NavigationDestination(
             selectedIcon: Image.asset(
@@ -82,7 +82,7 @@ class _NavigationExampleState extends State<NavigationExample> {
         const Conversation()
 
         /// Messages page
-      ][currentPageIndex],
+      ][Provider.of<NavigationStatus>(context).currentPageIndex],
     );
   }
 }

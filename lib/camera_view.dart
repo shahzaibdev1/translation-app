@@ -1,3 +1,4 @@
+import "dart:ui" as ui;
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+import 'package:translation_app/painters/text_detector_painter.dart';
 import 'package:translation_app/translation_details.dart';
 
 class CameraView extends StatefulWidget {
@@ -47,10 +49,9 @@ class _CameraViewState extends State<CameraView> {
   double _currentExposureOffset = 0.0;
   bool _changingCameraLens = false;
   TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
-  final _cameraLensDirection = CameraLensDirection.back;
   Image? image;
+  var _cameraLensDirection = CameraLensDirection.back;
   CustomPaint? _customPaint;
-  String? _text;
 
   @override
   void initState() {
@@ -59,7 +60,7 @@ class _CameraViewState extends State<CameraView> {
     setState(() {
       _textRecognizer = widget.recognizer;
     });
-  
+
     _initialize();
   }
 
@@ -68,7 +69,6 @@ class _CameraViewState extends State<CameraView> {
     super.didUpdateWidget(oldWidget);
     if (widget.recognizer != oldWidget.recognizer) {
       // Text prop has changed, update state (if needed) and rebuild
-      print("recognizerScript ${widget.recognizer.script}");
 
       setState(() {
         _textRecognizer = widget.recognizer;
@@ -97,53 +97,108 @@ class _CameraViewState extends State<CameraView> {
   _takePicture() async {
     if (_controller != null) {
       if (widget.customPaint != null) {
-        final picture = await _controller?.takePicture();
-        if (picture == null) {
-          return;
-        }
+        await _controller?.stopImageStream();
+        await _controller?.startImageStream((image) async {
+          await _controller?.stopImageStream();
 
-        final File imageFile = File(picture.path);
+          InputImage? inputImage = _inputImageFromCameraImage(image);
 
-        InputImage inputImage = InputImage.fromFilePath(imageFile.path);
-        final recognizedText = await _textRecognizer.processImage(inputImage);
-        List<Map<String, dynamic>> lst = [];
-        List<String> strings = [];
+          if (inputImage == null) {
+            return;
+          }
 
-        final TranslateLanguage sourceLang = widget.fromLang;
-        final TranslateLanguage targetLang = widget.targetLang;
+          // final File imageFile = File(picture.path);
 
-        final onDeviceTranslator =
-            OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
+          // InputImage inputImage = InputImage.fromFilePath(imageFile.path);
+          // final recognizedText = await _textRecognizer.processImage(inputImage);
+          // List<Map<String, dynamic>> lst = [];
+          // List<String> strings = [];
 
-        for (final textBlock in recognizedText.blocks) {
-          final String text = await onDeviceTranslator.translateText(textBlock.text);
-          lst.add({
-            "boundingBox": textBlock.boundingBox,
-            "cornerPoints": textBlock.cornerPoints,
-            "lines": textBlock.lines,
-            "text": text,
-            "recognizedLanguages": textBlock.recognizedLanguages
-          });
+          // final TranslateLanguage sourceLang = widget.fromLang;
+          // final TranslateLanguage targetLang = widget.targetLang;
 
-          strings.add(text);
-        }
+          // final onDeviceTranslator =
+          //     OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
 
-        // final painter = TextRecognizerPainter(
-        //   lst,
-        //   inputImage.metadata!.size,
-        //   inputImage.metadata!.rotation,
-        //   _cameraLensDirection,
-        // );
-        // _customPaint = CustomPaint(painter: painter);
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => TranslationDetails(text: strings, image: imageFile)));
-        // _isBusy = false;
-        if (mounted) {
-          setState(() {});
-        }
+          // for (final textBlock in recognizedText.blocks) {
+          //   final String text = await onDeviceTranslator.translateText(textBlock.text);
+          //   lst.add({
+          //     "boundingBox": textBlock.boundingBox,
+          //     "cornerPoints": textBlock.cornerPoints,
+          //     "lines": textBlock.lines,
+          //     "text": text,
+          //     "recognizedLanguages": textBlock.recognizedLanguages
+          //   });
+
+          //   strings.add(text);
+          // }
+          await _processImage(
+            inputImage,
+          );
+          // _customPaint = CustomPaint(painter: painter);
+          // Navigator.push(
+          //     context,
+          //     MaterialPageRoute(
+          //         builder: (context) => TranslationDetails(text: strings, image: imageFile)));
+          // // _isBusy = false;
+          // if (mounted) {
+          //   setState(() {});
+          // }
+        });
       }
+    }
+  }
+
+  Future<void> _processImage(InputImage inputImage) async {
+    final recognizedText = await _textRecognizer.processImage(inputImage);
+    if (inputImage.metadata?.size != null && inputImage.metadata?.rotation != null) {
+      List<Map<String, dynamic>> lst = [];
+
+      final TranslateLanguage sourceLang = widget.fromLang;
+      final TranslateLanguage targetLang = widget.targetLang;
+
+      final onDeviceTranslator =
+          OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
+
+      for (final textBlock in recognizedText.blocks) {
+        final String text = await onDeviceTranslator.translateText(textBlock.text);
+        lst.add({
+          "boundingBox": textBlock.boundingBox,
+          "cornerPoints": textBlock.cornerPoints,
+          "lines": textBlock.lines,
+          "text": text,
+          "recognizedLanguages": textBlock.recognizedLanguages
+        });
+      }
+
+      final painter = TextRecognizerPainter(
+        lst,
+        inputImage.metadata!.size,
+        inputImage.metadata!.rotation,
+        _cameraLensDirection,
+      );
+      _customPaint = CustomPaint(painter: painter);
+
+      if (_customPaint != null) {
+        Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        TranslationDetails(text: lst, customPaint: _customPaint!)))
+            .then((value) => _startLiveFeed);
+      }
+      // // _isBusy = false;
+      // if (mounted) {
+      //   setState(() {});
+      // }
+    } else {
+      print('Recognized text:\n\n${recognizedText.text}');
+      // TODO: set _customPaint to draw boundingRect on top of image
+      _customPaint = null;
+    }
+    // _isBusy = false;
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -205,24 +260,6 @@ class _CameraViewState extends State<CameraView> {
             child: const Icon(
               Icons.camera_alt_outlined,
               size: 80,
-            ),
-          ),
-        ),
-      );
-
-  Widget _backButton() => Positioned(
-        top: 40,
-        left: 8,
-        child: SizedBox(
-          height: 50.0,
-          width: 50.0,
-          child: FloatingActionButton(
-            heroTag: Object(),
-            onPressed: () => Navigator.of(context).pop(),
-            backgroundColor: Colors.black54,
-            child: const Icon(
-              Icons.arrow_back_ios_outlined,
-              size: 20,
             ),
           ),
         ),
@@ -428,38 +465,6 @@ class _CameraViewState extends State<CameraView> {
     DeviceOrientation.portraitDown: 180,
     DeviceOrientation.landscapeRight: 270,
   };
-
-  Future<InputImage?> _inputImageFromXFile(XFile imageFile) async {
-    // Read image bytes
-    final Uint8List bytes = await imageFile.readAsBytes();
-
-    // Get image dimensions
-    final image = await decodeImageFromList(bytes);
-    final width = image.width.toDouble();
-    final height = image.height.toDouble();
-
-    // Determine image format based on platform (heuristic approach)
-    InputImageFormat? format;
-    if (Platform.isAndroid) {
-      format = InputImageFormat.nv21; // Assuming NV21 for Android (common)
-    } else if (Platform.isIOS) {
-      format = InputImageFormat.bgra8888; // Assuming BGRA8888 for iOS (common)
-    } else {
-      // Handle other platforms or provide a more robust format detection
-      return null;
-    }
-
-    // Create InputImage from bytes and metadata
-    return InputImage.fromBytes(
-      bytes: bytes,
-      metadata: InputImageMetadata(
-        size: Size(width, height),
-        rotation: InputImageRotation.rotation0deg, // Assuming unknown rotation
-        format: format,
-        bytesPerRow: image.width, // Assuming bytesPerRow equals image width
-      ),
-    );
-  }
 
   InputImage? _inputImageFromCameraImage(CameraImage image) {
     if (_controller == null) return null;

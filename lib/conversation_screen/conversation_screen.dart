@@ -238,7 +238,7 @@ class _ConversationState extends State<Conversation> {
                                         ),
                                       ),
                                     )
-                                  : SizedBox.shrink(),
+                                  : const SizedBox.shrink(),
                               Container(
                                   margin: const EdgeInsets.only(
                                       left: 8.0, right: 8, bottom: 12, top: 4),
@@ -284,7 +284,7 @@ class _ConversationState extends State<Conversation> {
                                         ),
                                       ),
                                     )
-                                  : SizedBox.shrink(),
+                                  : const SizedBox.shrink(),
                             ])),
                     // Align(
                     //   alignment: Alignment.centerLeft,
