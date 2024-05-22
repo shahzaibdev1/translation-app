@@ -24,7 +24,9 @@ class NavigationBarApp extends StatelessWidget {
         theme: themeProvider.isDarkMode
             ? ThemeData.dark(useMaterial3: true)
             : ThemeData(useMaterial3: true),
-        home: const NavigationExample(),
+        home: const Column(children: [
+          Expanded(child: NavigationExample()),
+        ]),
       );
     });
   }
@@ -61,14 +63,19 @@ class _NavigationExampleState extends State<NavigationExample> {
             label: 'Text',
           ),
           const NavigationDestination(
-            selectedIcon: Icon(Icons.camera_alt),
-            icon: Icon(Icons.camera_alt_outlined),
-            label: 'Camera',
-          ),
-          const NavigationDestination(
             icon: Icon(Icons.messenger_outline_sharp),
             selectedIcon: Icon(Icons.messenger_sharp),
             label: 'Conversation',
+          ),
+          const NavigationDestination(
+            selectedIcon: Icon(Icons.format_color_text),
+            icon: Icon(Icons.format_color_text_outlined),
+            label: 'Dictionary',
+          ),
+          const NavigationDestination(
+            selectedIcon: Icon(Icons.menu_book),
+            icon: Icon(Icons.menu_book_outlined),
+            label: 'Phrases',
           ),
         ],
       ),
@@ -76,10 +83,11 @@ class _NavigationExampleState extends State<NavigationExample> {
         /// Home page
         const TextScreen(),
 
-        /// Notifications page
-        const TextRecognizerView(),
+        const Conversation(),
+        const Conversation(),
+        const Conversation(),
 
-        const Conversation()
+        /// Notifications page
 
         /// Messages page
       ][Provider.of<NavigationStatus>(context).currentPageIndex],

@@ -33,7 +33,6 @@ class TextRecognizerPainter extends CustomPainter {
         ParagraphStyle(textAlign: TextAlign.left, fontSize: 8, textDirection: TextDirection.ltr),
       );
       builder.pushStyle(ui.TextStyle(color: Colors.black, background: background));
-      print("Recognized text:, ${textBlock["text"]}");
 
       builder.addText(textBlock["text"]);
       builder.pop();
@@ -59,18 +58,6 @@ class TextRecognizerPainter extends CustomPainter {
         rotation,
         cameraLensDirection,
       );
-      // final bottom = translateY(
-      //   textBlock.boundingBox.bottom,
-      //   size,
-      //   imageSize,
-      //   rotation,
-      //   cameraLensDirection,
-      // );
-      //
-      // canvas.drawRect(
-      //   Rect.fromLTRB(left, top, right, bottom),
-      //   paint,
-      // );
 
       final List<Offset> cornerPoints = <Offset>[];
       for (final point in textBlock["cornerPoints"]) {

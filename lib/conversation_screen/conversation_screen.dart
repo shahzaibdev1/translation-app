@@ -6,6 +6,7 @@ import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translation_app/conversation_screen/pressable_badge.dart';
+import 'package:translation_app/widgets/drawer.dart';
 
 class Conversation extends StatefulWidget {
   const Conversation({super.key});
@@ -46,8 +47,7 @@ class _ConversationState extends State<Conversation> {
   void _startListening() async {
     await _speechToText.listen(
         onResult: _onSpeechResult,
-        listenOptions:
-            SpeechListenOptions(partialResults: false, cancelOnError: true));
+        listenOptions: SpeechListenOptions(partialResults: false, cancelOnError: true));
 
     setState(() {
       is1Listening = true;
@@ -100,8 +100,7 @@ class _ConversationState extends State<Conversation> {
   void _startListening1() async {
     await _speechToText1.listen(
         onResult: _onSpeechResult1,
-        listenOptions:
-            SpeechListenOptions(partialResults: false, cancelOnError: true));
+        listenOptions: SpeechListenOptions(partialResults: false, cancelOnError: true));
 
     setState(() {
       is2Listening = true;
@@ -152,13 +151,13 @@ class _ConversationState extends State<Conversation> {
 
   void handleChange() async {
     String text = chatTextController.text;
+    if (text == "") return;
 
     if (currentMan == 1) {
-      final onDeviceTranslator = OnDeviceTranslator(
-          sourceLanguage: firstMan, targetLanguage: secondMan);
+      final onDeviceTranslator =
+          OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
 
-      final String translatedText =
-          await onDeviceTranslator.translateText(text);
+      final String translatedText = await onDeviceTranslator.translateText(text);
 
       setState(() {
         messages.add({
@@ -172,11 +171,10 @@ class _ConversationState extends State<Conversation> {
 
       chatTextController.clear();
     } else if (currentMan == 2) {
-      final onDeviceTranslator = OnDeviceTranslator(
-          sourceLanguage: secondMan, targetLanguage: firstMan);
+      final onDeviceTranslator =
+          OnDeviceTranslator(sourceLanguage: secondMan, targetLanguage: firstMan);
 
-      final String translatedText =
-          await onDeviceTranslator.translateText(text);
+      final String translatedText = await onDeviceTranslator.translateText(text);
 
       setState(() {
         messages.add({
@@ -195,7 +193,6 @@ class _ConversationState extends State<Conversation> {
   }
 
   void _start_speaking(String text, TranslateLanguage? lang) {
-    print(lang);
     if (lang != null) {
       _flutterTts.setLanguage(lang.bcpCode);
     }
@@ -207,6 +204,11 @@ class _ConversationState extends State<Conversation> {
     final ThemeData theme = Theme.of(context);
 
     return Scaffold(
+      drawer: const DrawerWidget(),
+      appBar: AppBar(
+        title: const Text("Translator"),
+        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.star_rounded), iconSize: 30)],
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -217,13 +219,12 @@ class _ConversationState extends State<Conversation> {
                   return Column(children: [
                     Align(
                         alignment: messages[index]["currentMan"] == '1'
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
+                            ? Alignment.centerLeft
+                            : Alignment.centerRight,
                         child: Row(
-                            mainAxisAlignment:
-                                messages[index]["currentMan"] == '1'
-                                    ? MainAxisAlignment.end
-                                    : MainAxisAlignment.start,
+                            mainAxisAlignment: messages[index]["currentMan"] == '1'
+                                ? MainAxisAlignment.start
+                                : MainAxisAlignment.end,
                             children: [
                               messages[index]["currentMan"] == '1'
                                   ? IconButton.filled(
@@ -249,15 +250,11 @@ class _ConversationState extends State<Conversation> {
                                   ),
                                   child: Column(children: [
                                     Text(
-                                        messages[index]["translatedText"] !=
-                                                null
+                                        messages[index]["translatedText"] != null
                                             ? messages[index]["text"]!
                                             : "",
-                                        style: theme.textTheme.bodyLarge!
-                                            .copyWith(
-                                                color: theme
-                                                    .colorScheme.onPrimary
-                                                    .withOpacity(0.3))),
+                                        style: theme.textTheme.bodyLarge!.copyWith(
+                                            color: theme.colorScheme.onPrimary.withOpacity(0.3))),
                                     // Divider(),
                                     // Spacer(),
                                     const SizedBox(height: 5),
@@ -266,9 +263,7 @@ class _ConversationState extends State<Conversation> {
                                           ? messages[index]["translatedText"]!
                                           : "",
                                       style: theme.textTheme.bodyLarge!
-                                          .copyWith(
-                                              color:
-                                                  theme.colorScheme.onPrimary),
+                                          .copyWith(color: theme.colorScheme.onPrimary),
                                     ),
                                   ])),
                               messages[index]["currentMan"] == '2'
@@ -315,18 +310,16 @@ class _ConversationState extends State<Conversation> {
                   children: [
                     Column(
                       children: [
-                        IconButton.filledTonal(
-                            onPressed: _speechToText.isNotListening
-                                ? _startListening
-                                : _stopListening,
+                        IconButton.filled(
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStatePropertyAll(
+                                    theme.colorScheme.primary.withAlpha(150))),
+                            onPressed:
+                                _speechToText.isNotListening ? _startListening : _stopListening,
                             icon: _speechToText.isListening
-                                ? SizedBox(
-                                    width: 25,
-                                    height: 25,
-                                    child: CircularProgressIndicator(
-                                      color: theme.colorScheme.onPrimary,
-                                    ))
-                                : const Icon(Icons.mic),
+                                ? const SizedBox(
+                                    width: 25, height: 25, child: CircularProgressIndicator())
+                                : Icon(Icons.mic, color: theme.colorScheme.onBackground),
                             padding: const EdgeInsets.all(20)),
                         const Divider(),
                         _buildDropdown(),
@@ -334,18 +327,16 @@ class _ConversationState extends State<Conversation> {
                     ),
                     Column(
                       children: [
-                        IconButton.filledTonal(
-                            onPressed: _speechToText1.isNotListening
-                                ? _startListening1
-                                : _stopListening1,
+                        IconButton.filled(
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStatePropertyAll(
+                                    theme.colorScheme.primary.withAlpha(150))),
+                            onPressed:
+                                _speechToText1.isNotListening ? _startListening1 : _stopListening1,
                             icon: _speechToText1.isListening
-                                ? SizedBox(
-                                    width: 25,
-                                    height: 25,
-                                    child: CircularProgressIndicator(
-                                      color: theme.colorScheme.onPrimary,
-                                    ))
-                                : const Icon(Icons.mic),
+                                ? const SizedBox(
+                                    width: 25, height: 25, child: CircularProgressIndicator())
+                                : Icon(Icons.mic, color: theme.colorScheme.onBackground),
                             padding: const EdgeInsets.all(20)),
                         const Divider(),
                         _buildToDropdown(),
@@ -361,8 +352,7 @@ class _ConversationState extends State<Conversation> {
                       margin: const EdgeInsets.symmetric(horizontal: 10),
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
-                          border: Border.all(
-                              width: 1, color: Colors.black.withAlpha(100)),
+                          border: Border.all(width: 1, color: Colors.black.withAlpha(100)),
                           borderRadius: BorderRadius.circular(6)),
                       child: Row(children: [
                         SizedBox(
@@ -380,8 +370,7 @@ class _ConversationState extends State<Conversation> {
                                 ? setState(() => currentMan = 2)
                                 : setState(() => currentMan = 1))
                       ])),
-                  IconButton(
-                      onPressed: handleChange, icon: const Icon(Icons.send))
+                  IconButton(onPressed: handleChange, icon: const Icon(Icons.send))
                 ],
               ),
             ),
@@ -407,8 +396,7 @@ class _ConversationState extends State<Conversation> {
             });
           }
         },
-        items: TranslateLanguage.values
-            .map<DropdownMenuItem<TranslateLanguage>>((script) {
+        items: TranslateLanguage.values.map<DropdownMenuItem<TranslateLanguage>>((script) {
           return DropdownMenuItem<TranslateLanguage>(
             value: script,
             child: Text(script.name.isNotEmpty
@@ -434,8 +422,7 @@ class _ConversationState extends State<Conversation> {
             });
           }
         },
-        items: TranslateLanguage.values
-            .map<DropdownMenuItem<TranslateLanguage>>((script) {
+        items: TranslateLanguage.values.map<DropdownMenuItem<TranslateLanguage>>((script) {
           return DropdownMenuItem<TranslateLanguage>(
             value: script,
             child: Text(script.name.isNotEmpty

@@ -122,8 +122,8 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
   var _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
   bool _canProcess = true;
   int _selectedLanguage = 0; // Initialize _selectedLanguage with default value
-  int _selectedTargetLanguage = 0; // Initialize _selectedLanguage with default value
-  TranslateLanguage toLanguage = TranslateLanguage.english;
+  int _selectedTargetLanguage = 1; // Initialize _selectedLanguage with default value
+  TranslateLanguage toLanguage = TranslateLanguage.spanish;
 
   bool _isBusy = false;
   CustomPaint? _customPaint;
@@ -135,6 +135,20 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
     _canProcess = false;
     _textRecognizer.close();
     super.dispose();
+  }
+
+  _showFrom(BuildContext ctx) {
+    showModalBottomSheet(
+        elevation: 10,
+        backgroundColor: Colors.amber,
+        context: ctx,
+        builder: (ctx) => Container(
+              width: 300,
+              height: 250,
+              color: Colors.white54,
+              alignment: Alignment.center,
+              child: const Text('Breathe in... Breathe out...'),
+            ));
   }
 
   @override
@@ -163,10 +177,11 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
                         color: Colors.black54,
                         borderRadius: BorderRadius.circular(10.0),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: _buildDropdown(),
-                      )),
+                      child: Padding(padding: const EdgeInsets.all(4.0), child: _buildDropdown()
+                          // OutlinedButton(
+                          //     onPressed: _showFrom(context),
+                          //     child: Text(fromLanguages[_selectedLanguage]["label"])),
+                          )),
                   const Icon(Icons.chevron_right),
                   Container(
                       // margin: const EdgeInsets.only(left: 8),
@@ -216,7 +231,6 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
         }).toList(),
         onChanged: (int? langCode) {
           if (langCode != null) {
-            print("$langCode Lang Code");
             setState(() {
               _selectedTargetLanguage = targetLanguages[langCode]["lang"];
 
