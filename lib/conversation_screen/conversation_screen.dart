@@ -6,7 +6,7 @@ import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translation_app/conversation_screen/pressable_badge.dart';
-import 'package:translation_app/widgets/drawer.dart';
+import 'package:translation_app/drawer/drawer.dart';
 
 class Conversation extends StatefulWidget {
   const Conversation({super.key});

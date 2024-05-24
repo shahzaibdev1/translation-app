@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:translation_app/TextRecognizer.dart';
 import 'package:translation_app/conversation_screen/conversation_screen.dart';
+import 'package:translation_app/dictionary/dictionary.dart';
 import 'package:translation_app/providers/navigation_status.dart';
 import 'package:translation_app/providers/theme_provider.dart';
 import 'package:translation_app/text_screen/text_screen.dart';
@@ -84,7 +85,7 @@ class _NavigationExampleState extends State<NavigationExample> {
         const TextScreen(),
 
         const Conversation(),
-        const Conversation(),
+        const DictionaryScreen(),
         const Conversation(),
 
         /// Notifications page

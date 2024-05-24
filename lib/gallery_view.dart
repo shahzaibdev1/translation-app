@@ -7,7 +7,7 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'utils.dart';
+import 'utils/utils.dart';
 
 class GalleryView extends StatefulWidget {
   const GalleryView(
