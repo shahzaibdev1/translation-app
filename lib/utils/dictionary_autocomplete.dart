@@ -89,43 +89,46 @@ class DictionaryAutocompleteState extends State<DictionaryAutocomplete> {
         // maxLength: 200,
       ),
       _suggestions.isNotEmpty
-          ? Positioned(
-              top: 65,
-              width: MediaQuery.of(context).size.width * 0.9,
+          ?
+          // Positioned(
+          //     width: MediaQuery.of(context).size.width * 0.9,
+          //     height: 300,
+          //     child:
+          Container(
+              margin: EdgeInsets.only(top: 65),
+              width: 200,
               height: 300,
-              child: Container(
-                width: 200,
-                height: 300,
-                padding: const EdgeInsets.all(10.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(5.0),
-                  // boxShadow: [
-                  //   BoxShadow(
-                  //     color: Colors.grey.withOpacity(0.5),
-                  //     spreadRadius: 1,
-                  //     blurRadius: 3,
-                  //     offset: const Offset(0, 2), // changes position of shadow
-                  //   ),
-                  // ],
-                ),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _suggestions.length,
-                  itemBuilder: (context, index) {
-                    final suggestion = _suggestions[index];
-                    return ListTile(
-                      title: Text(suggestion),
-                      onTap: () {
-                        setState(() {
-                          _controller.text = suggestion;
-                          _suggestions.clear();
-                        });
-                      },
-                    );
-                  },
-                ),
-              ))
+              padding: const EdgeInsets.all(10.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(5.0),
+                // boxShadow: [
+                //   BoxShadow(
+                //     color: Colors.grey.withOpacity(0.5),
+                //     spreadRadius: 1,
+                //     blurRadius: 3,
+                //     offset: const Offset(0, 2), // changes position of shadow
+                //   ),
+                // ],
+              ),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: _suggestions.length,
+                itemBuilder: (context, index) {
+                  final suggestion = _suggestions[index];
+                  return ListTile(
+                    title: Text(suggestion),
+                    onTap: () {
+                      setState(() {
+                        _controller.text = suggestion;
+                        _suggestions.clear();
+                      });
+                    },
+                  );
+                },
+              ),
+            )
+          // )
           : const SizedBox.shrink(),
     ]);
   }
