@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:translation_app/db/db_helper.dart';
+import 'package:translation_app/dictionary/result_screen.dart';
 
 import 'dart:convert';
 
@@ -53,6 +56,21 @@ class DictionaryAutocompleteState extends State<DictionaryAutocomplete> {
     super.dispose();
   }
 
+  void openResult(String text) async {
+    DateTime time = DateTime.now();
+
+    Navigator.push(context, MaterialPageRoute(builder: (context) => ResultScreen(text: text)));
+    final dbHelper = DatabaseHelper();
+
+    dbHelper.insertData({
+      "text": text,
+      'time': DateFormat("dd MMM yyyy, hh:mm a").format(time),
+    });
+
+    _controller.clear();
+    _suggestions.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(clipBehavior: Clip.none, children: [
@@ -95,7 +113,7 @@ class DictionaryAutocompleteState extends State<DictionaryAutocomplete> {
           //     height: 300,
           //     child:
           Container(
-              margin: EdgeInsets.only(top: 65),
+              margin: const EdgeInsets.only(top: 65),
               width: 200,
               height: 300,
               padding: const EdgeInsets.all(10.0),
@@ -120,8 +138,7 @@ class DictionaryAutocompleteState extends State<DictionaryAutocomplete> {
                     title: Text(suggestion),
                     onTap: () {
                       setState(() {
-                        _controller.text = suggestion;
-                        _suggestions.clear();
+                        openResult(suggestion);
                       });
                     },
                   );

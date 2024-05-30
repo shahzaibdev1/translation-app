@@ -122,13 +122,22 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
   var _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
   bool _canProcess = true;
   int _selectedLanguage = 0; // Initialize _selectedLanguage with default value
-  int _selectedTargetLanguage = 1; // Initialize _selectedLanguage with default value
+  // int _selectedTargetLanguage = 1; // Initialize _selectedLanguage with default value
   TranslateLanguage toLanguage = TranslateLanguage.spanish;
-
+  bool isTextEmpty = true;
+  TextEditingController fromTextController = TextEditingController();
+  TextEditingController toTextController = TextEditingController();
+  bool isFromTextEmpty = true;
+  bool isToTextEmpty = true;
   bool _isBusy = false;
   CustomPaint? _customPaint;
   String? _text;
   var _cameraLensDirection = CameraLensDirection.back;
+
+  TextEditingController inputFieldController = TextEditingController();
+  TranslateLanguage _selectedFromLang = TranslateLanguage.english;
+  TranslateLanguage _selectedToLang = TranslateLanguage.spanish;
+  // String _translatedText = "";
 
   @override
   void dispose() async {
@@ -137,19 +146,19 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
     super.dispose();
   }
 
-  _showFrom(BuildContext ctx) {
-    showModalBottomSheet(
-        elevation: 10,
-        backgroundColor: Colors.amber,
-        context: ctx,
-        builder: (ctx) => Container(
-              width: 300,
-              height: 250,
-              color: Colors.white54,
-              alignment: Alignment.center,
-              child: const Text('Breathe in... Breathe out...'),
-            ));
-  }
+  // _showFrom(BuildContext ctx) {
+  //   showModalBottomSheet(
+  //       elevation: 10,
+  //       backgroundColor: Colors.amber,
+  //       context: ctx,
+  //       builder: (ctx) => Container(
+  //             width: 300,
+  //             height: 250,
+  //             color: Colors.white54,
+  //             alignment: Alignment.center,
+  //             child: const Text('Breathe in... Breathe out...'),
+  //           ));
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -168,31 +177,54 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
         ),
         Positioned(
             top: 110,
-            left: 80,
+            left: 40,
             child: Row(
               children: [
                 Row(children: [
                   Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      child: Padding(padding: const EdgeInsets.all(4.0), child: _buildDropdown()
-                          // OutlinedButton(
-                          //     onPressed: _showFrom(context),
-                          //     child: Text(fromLanguages[_selectedLanguage]["label"])),
-                          )),
+                    decoration: BoxDecoration(
+                      // color: Colors.black54,
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child:
+                        // Padding(padding: const EdgeInsets.all(4.0), child: _buildDropdown()
+                        FilledButton.icon(
+                            style: ButtonStyle(
+                                shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
+                                    RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10))),
+                                foregroundColor: const MaterialStatePropertyAll(Colors.black),
+                                backgroundColor: MaterialStatePropertyAll(Colors.blue.shade200)),
+                            onPressed: () => _showFromBottom(context),
+                            label: Text(_selectedFromLang.name),
+                            icon: const Icon(Icons.arrow_drop_down)),
+                  ),
+
+                  // )
+
                   const Icon(Icons.chevron_right),
                   Container(
                       // margin: const EdgeInsets.only(left: 8),
                       decoration: BoxDecoration(
-                        color: Colors.black54,
+                        // color: Colors.black54,
                         borderRadius: BorderRadius.circular(10.0),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: _buildTargetDropdown(),
-                      )),
+                          padding: const EdgeInsets.all(4.0),
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.33,
+                            child: FilledButton.icon(
+                                style: ButtonStyle(
+                                    shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10))),
+                                    foregroundColor: const MaterialStatePropertyAll(Colors.black),
+                                    backgroundColor:
+                                        MaterialStatePropertyAll(Colors.blue.shade200)),
+                                onPressed: () => _showTo(context),
+                                label: Text(_selectedToLang.name),
+                                icon: const Icon(Icons.arrow_drop_down)),
+                          ))),
                 ]),
               ],
             )),
@@ -200,59 +232,195 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
     );
   }
 
-  Widget _buildDropdown() => DropdownButton<int>(
-        value: _selectedLanguage,
-        items: fromLanguages.map((option) {
-          // Cast the "orig" value to TextRecognitionScript
-          return DropdownMenuItem<int>(
-            value: option['lang'], // Use language code as value
-            child: Text(option['label']),
-          );
-        }).toList(),
-        onChanged: (int? langCode) {
-          if (langCode != null) {
-            print("$langCode Lang Code");
-            setState(() {
-              _textRecognizer = TextRecognizer(script: fromLanguages[langCode]["orig"]);
-              _selectedLanguage = fromLanguages[langCode]["lang"];
-            });
-          }
-        },
-      );
+  _showFromBottom(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
 
-  Widget _buildTargetDropdown() => DropdownButton<int>(
-        value: _selectedTargetLanguage,
-        items: targetLanguages.map((option) {
-          // Cast the "orig" value to TextRecognitionScript
-          return DropdownMenuItem<int>(
-            value: option['lang'], // Use language code as value
-            child: Text(option['label']),
-          );
-        }).toList(),
-        onChanged: (int? langCode) {
-          if (langCode != null) {
-            setState(() {
-              _selectedTargetLanguage = targetLanguages[langCode]["lang"];
-
-              toLanguage = targetLanguages[langCode]["target"];
-            });
-          }
-        },
-      );
-
-// Function to get TextRecognitionScript based on language code (modify as needed)
-  TextRecognitionScript getScriptFromLanguage(int langCode) {
-    switch (langCode) {
-      case 'en':
-        return TextRecognitionScript.latin;
-      case 'sp':
-        return TextRecognitionScript.latin;
-      case 'fr': // Add French case if present in "fromLanguages"
-        return TextRecognitionScript.latin; // Assuming French also uses latin script
-      default:
-        return TextRecognitionScript.latin; // Handle unknown languages (optional)
-    }
+    showModalBottomSheet(
+        elevation: 10,
+        // backgroundColor: Colors.amber,
+        enableDrag: true,
+        showDragHandle: true,
+        context: context,
+        builder: (ctx) => StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+              return Container(
+                // width: 300,
+                height: MediaQuery.of(context).size.height * 0.6,
+                // color: Colors.white54,
+                alignment: Alignment.center,
+                child: ListView(children: [
+                  ListTile(
+                      title: TextFormField(
+                          controller: fromTextController,
+                          onChanged: handleChange,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: theme.colorScheme.background,
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 5.0, horizontal: 20.0),
+                            suffixIcon: Visibility(
+                              visible: !isFromTextEmpty,
+                              child: IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () {
+                                  fromTextController.clear();
+                                  setState(() {
+                                    isFromTextEmpty = true;
+                                  });
+                                },
+                              ),
+                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+                            labelText: "Search",
+                          ))),
+                  const ListTile(title: Text("All Languages", style: TextStyle(fontSize: 20))),
+                  const Divider(indent: 5),
+                  ...fromLanguages
+                      .where((element) => element["label"]
+                          .toLowerCase()
+                          .contains(fromTextController.text.toLowerCase()))
+                      .map((title) => ListTile(
+                          title: TextButton(
+                              style: const ButtonStyle(alignment: Alignment.centerLeft),
+                              onPressed: () => _onFromSelected(title["target"], title["lang"], ctx),
+                              child: Text(title["label"]))))
+                      .toList()
+                ]),
+              );
+            }));
   }
+
+  void _onFromSelected(TranslateLanguage lang, int idx, BuildContext ctx) {
+    // int idx = fromLanguages.indexWhere((element) => element["target"] == lang);
+    setState(() {
+      _selectedFromLang = lang;
+      _textRecognizer = TextRecognizer(script: fromLanguages[idx]["orig"]);
+      _selectedLanguage = idx;
+    });
+
+    Navigator.pop(ctx);
+  }
+
+  void _onToSelected(TranslateLanguage lang, int idx, BuildContext ctx) {
+    setState(() {
+      _selectedToLang = lang;
+      _selectedLanguage = idx;
+
+      toLanguage = lang;
+    });
+
+    Navigator.pop(ctx);
+  }
+
+  handleChange(String value) {
+    setState(() {
+      fromTextController.text = value; // Update the text controller
+      isFromTextEmpty = value.isEmpty;
+    });
+  }
+
+  handleToChange(String value) {
+    setState(() {
+      toTextController.text = value; // Update the text controller
+      isToTextEmpty = value.isEmpty;
+    });
+  }
+
+  _showTo(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    showModalBottomSheet(
+        elevation: 10,
+        // backgroundColor: Colors.amber,
+        enableDrag: true,
+        showDragHandle: true,
+        context: context,
+        builder: (ctx) => StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+              return Container(
+                // width: 300,
+                height: MediaQuery.of(context).size.height * 0.6,
+                // color: Colors.white54,
+                alignment: Alignment.center,
+                child: ListView(children: [
+                  ListTile(
+                      title: TextFormField(
+                          controller: toTextController,
+                          onChanged: handleToChange,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: theme.colorScheme.background,
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 5.0, horizontal: 20.0),
+                            suffixIcon: Visibility(
+                              visible: !isToTextEmpty,
+                              child: IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () {
+                                  toTextController.clear();
+                                  setState(() {
+                                    isToTextEmpty = true;
+                                  });
+                                },
+                              ),
+                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+                            labelText: "Search",
+                          ))),
+                  const ListTile(title: Text("All Languages", style: TextStyle(fontSize: 20))),
+                  const Divider(indent: 5),
+                  ...TranslateLanguage.values
+                      .where((element) => element.name.contains(toTextController.text))
+                      .toList()
+                      .asMap()
+                      .entries
+                      .map((title) => ListTile(
+                          title: TextButton(
+                              style: const ButtonStyle(alignment: Alignment.centerLeft),
+                              onPressed: () => _onToSelected(title.value, title.key, ctx),
+                              child: Text(title.value.name))))
+                      .toList()
+                ]),
+              );
+            }));
+  }
+
+  // Widget _buildDropdown() => DropdownButton<int>(
+  //       value: _selectedLanguage,
+  //       items: fromLanguages.map((option) {
+  //         // Cast the "orig" value to TextRecognitionScript
+  //         return DropdownMenuItem<int>(
+  //           value: option['lang'], // Use language code as value
+  //           child: Text(option['label']),
+  //         );
+  //       }).toList(),
+  //       onChanged: (int? langCode) {
+  //         if (langCode != null) {
+  //           setState(() {
+  //             _textRecognizer = TextRecognizer(script: fromLanguages[langCode]["orig"]);
+  //             _selectedLanguage = fromLanguages[langCode]["lang"];
+  //           });
+  //         }
+  //       },
+  //     );
+
+  // Widget _buildTargetDropdown() => DropdownButton<int>(
+  //       value: _selectedLanguage,
+  //       items: targetLanguages.map((option) {
+  //         // Cast the "orig" value to TextRecognitionScript
+  //         return DropdownMenuItem<int>(
+  //           value: option['lang'], // Use language code as value
+  //           child: Text(option['label']),
+  //         );
+  //       }).toList(),
+  //       onChanged: (int? langCode) {
+  //         if (langCode != null) {
+  //           setState(() {
+  //             // _selectedTargetLanguage = targetLanguages[langCode]["lang"];
+
+  //             toLanguage = targetLanguages[langCode]["target"];
+  //           });
+  //         }
+  //       },
+  //     );
 
   Future<void> _processImage(InputImage inputImage) async {
     if (!_canProcess) return;
@@ -268,6 +436,10 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
 
       final TranslateLanguage sourceLang = fromLanguages[_selectedLanguage]["target"];
       final TranslateLanguage targetLang = toLanguage;
+
+      print("object: $sourceLang");
+      print("oject: $targetLang");
+      print("oject: ${_textRecognizer.script}");
 
       final onDeviceTranslator =
           OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);

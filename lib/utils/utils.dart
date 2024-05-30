@@ -6,6 +6,7 @@ import 'package:path/path.dart';
 import 'dart:async';
 
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Future<String> getAssetPath(String asset) async {
   final path = await getLocalPath(asset);
@@ -36,5 +37,17 @@ class Debouncer {
 
   void dispose() {
     _timer?.cancel();
+  }
+}
+
+class PreferencesSettings {
+  static void saveTheme(bool theme) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setBool('theme', theme);
+  }
+
+  static void getTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.getBool('theme') ?? false;
   }
 }

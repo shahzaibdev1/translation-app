@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:translation_app/providers/theme_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({super.key});
@@ -11,17 +11,39 @@ class DrawerWidget extends StatefulWidget {
 }
 
 class _DrawerWidgetState extends State<DrawerWidget> {
+  handleOpenInBrowser(String url) async {
+    try {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: const Text('Opening URL in browser!'),
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      130)),
+        );
+      }
+      Uri uri = Uri.parse(url);
+      // if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      // } else {
+      //   throw 'Could not launch $url';
+      // }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-
     return Drawer(
       width: MediaQuery.of(context).size.width * 0.8,
       child: SafeArea(
           child: ListView(
         children: [
           SizedBox(
-              height: 250,
+              height: 240,
               child: DrawerHeader(
                   decoration: BoxDecoration(
                       border: Border.all(
@@ -38,7 +60,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                           margin: const EdgeInsets.only(top: 20),
                           child: const Text(
                             "Language Translator",
-                            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                           )),
                       Container(
                           margin: const EdgeInsets.only(top: 0),
@@ -58,13 +80,18 @@ class _DrawerWidgetState extends State<DrawerWidget> {
             ),
             child: const ListTile(
               title: Text('Get Premium',
-                  style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                  style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold)),
               subtitle: Text('Remove ads by upgrading to premium',
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
               // Other ListTile properties...
             ),
           ),
           ListTile(
+            leading: const Icon(
+              color: Color(0xff727272),
+              Icons.color_lens_outlined,
+              size: 24,
+            ),
             title: Text(
                 Provider.of<ThemeProvider>(context).isDarkMode
                     ? "Use light theme"
@@ -88,11 +115,15 @@ class _DrawerWidgetState extends State<DrawerWidget> {
             // onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
           ),
           ListTile(
+            // onTap: () => handleOpenInBrowser(
+            //     "https://play.google.com/store/apps/developer?id=Think+Apps+Lab"),
             leading: Image.asset("assets/images/share.png", width: 24, height: 24),
             title: const Text("Share App", style: TextStyle(fontWeight: FontWeight.bold)),
             // onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
           ),
           ListTile(
+            onTap: () =>
+                handleOpenInBrowser("https://sites.google.com/view/thinkappstudioprivacypolicy"),
             leading: Image.asset("assets/images/privacy_policy.png", width: 24, height: 24),
             title: const Text("Privacy Policy", style: TextStyle(fontWeight: FontWeight.bold)),
             // onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),

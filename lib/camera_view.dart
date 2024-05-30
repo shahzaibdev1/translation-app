@@ -193,7 +193,7 @@ class _CameraViewState extends State<CameraView> {
       _customPaint = CustomPaint(painter: painter);
 
       if (_customPaint != null) {
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) {
@@ -267,7 +267,7 @@ class _CameraViewState extends State<CameraView> {
   }
 
   Widget _takePictureControl() => Positioned(
-        bottom: 16,
+        bottom: 34,
         left: MediaQuery.of(context).size.width * 0.5 - 35,
         child: SizedBox(
           height: 80.0,
@@ -285,7 +285,7 @@ class _CameraViewState extends State<CameraView> {
       );
 
   Widget _detectionViewModeToggle() => Positioned(
-        bottom: 126,
+        bottom: 146,
         left: 8,
         child: SizedBox(
           height: 50.0,
@@ -303,7 +303,7 @@ class _CameraViewState extends State<CameraView> {
       );
 
   Widget _switchLiveCameraToggle() => Positioned(
-        bottom: 126,
+        bottom: 146,
         right: 8,
         child: SizedBox(
           height: 50.0,
@@ -321,7 +321,7 @@ class _CameraViewState extends State<CameraView> {
       );
 
   Widget _zoomControl() => Positioned(
-        bottom: 130,
+        bottom: 140,
         left: 0,
         right: 0,
         child: Align(
