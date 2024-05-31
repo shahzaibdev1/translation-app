@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
-import 'package:translation_app/TextRecognizer.dart';
 import 'package:translation_app/conversation_screen/conversation_screen.dart';
 import 'package:translation_app/dictionary/dictionary.dart';
 import 'package:translation_app/providers/navigation_status.dart';
@@ -49,15 +47,15 @@ class _NavigationBarAppState extends State<NavigationBarApp> {
                     bodyLarge: TextStyle(fontFamily: "Gordita"),
                     bodyMedium: TextStyle(fontFamily: "Gordita"),
                     bodySmall: TextStyle(fontFamily: "Gordita")),
-                navigationBarTheme: NavigationBarThemeData(
-                  indicatorColor: Theme.of(context).colorScheme.background,
-                  labelTextStyle: MaterialStateProperty.resolveWith((states) {
-                    if (states.contains(MaterialState.selected)) {
-                      return const TextStyle(color: Colors.blue); // Color when selected
-                    }
-                    return const TextStyle(color: Colors.grey); // Color when not selected
-                  }),
-                ),
+                // navigationBarTheme: NavigationBarThemeData(
+                //   indicatorColor: Theme.of(context).colorScheme.background,
+                //   labelTextStyle: MaterialStateProperty.resolveWith((states) {
+                //     if (states.contains(MaterialState.selected)) {
+                //       return const TextStyle(color: Colors.blue); // Color when selected
+                //     }
+                //     return const TextStyle(color: Colors.grey); // Color when not selected
+                //   }),
+                // ),
               )
             : ThemeData(
                 useMaterial3: true,
@@ -65,16 +63,16 @@ class _NavigationBarAppState extends State<NavigationBarApp> {
                     bodyLarge: TextStyle(fontFamily: "Gordita"),
                     bodyMedium: TextStyle(fontFamily: "Gordita"),
                     bodySmall: TextStyle(fontFamily: "Gordita")),
-                navigationBarTheme: NavigationBarThemeData(
-                  indicatorColor: Theme.of(context).colorScheme.background,
-                  labelTextStyle: MaterialStateProperty.resolveWith((states) {
-                    final defaultStyle = Theme.of(context).textTheme.bodyMedium;
-                    if (states.contains(MaterialState.selected)) {
-                      return defaultStyle?.copyWith(color: Colors.blue); // Color when selected
-                    }
-                    return defaultStyle?.copyWith(color: Colors.grey);
-                  }),
-                ),
+                // navigationBarTheme: NavigationBarThemeData(
+                //   indicatorColor: Theme.of(context).colorScheme.background,
+                //   labelTextStyle: MaterialStateProperty.resolveWith((states) {
+                //     final defaultStyle = Theme.of(context).textTheme.bodyMedium;
+                //     if (states.contains(MaterialState.selected)) {
+                //       return defaultStyle?.copyWith(color: Colors.blue); // Color when selected
+                //     }
+                //     return defaultStyle?.copyWith(color: Colors.grey);
+                //   }),
+                // ),
               ),
         home: isFirst
             ? Scaffold(
@@ -139,8 +137,9 @@ class _NavigationExampleState extends State<NavigationExample> {
         onDestinationSelected: (int index) {
           Provider.of<NavigationStatus>(context, listen: false).changePageIndex(index);
         },
-        indicatorColor: theme.colorScheme.background,
+        indicatorColor: theme.colorScheme.primary.withAlpha(100),
         selectedIndex: Provider.of<NavigationStatus>(context).currentPageIndex,
+        animationDuration: const Duration(milliseconds: 2000),
         destinations: <Widget>[
           NavigationDestination(
             selectedIcon: Image.asset(

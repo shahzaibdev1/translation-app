@@ -71,7 +71,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     ],
                   ))),
           Container(
-            height: 120,
+            height: 100,
             decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('assets/images/banner.png'),
@@ -90,42 +90,47 @@ class _DrawerWidgetState extends State<DrawerWidget> {
             leading: const Icon(
               color: Color(0xff727272),
               Icons.color_lens_outlined,
-              size: 24,
+              size: 22,
             ),
             title: Text(
                 Provider.of<ThemeProvider>(context).isDarkMode
                     ? "Use light theme"
                     : "Use dark theme",
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
           ),
           ListTile(
-            leading: Image.asset("assets/images/history.png", width: 24, height: 24),
-            title: const Text("History", style: TextStyle(fontWeight: FontWeight.bold)),
+            leading: Image.asset("assets/images/history.png", width: 22, height: 22),
+            title:
+                const Text("History", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             // onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
           ),
           ListTile(
-            leading: Image.asset("assets/images/language.png", width: 24, height: 24),
-            title: const Text("Language", style: TextStyle(fontWeight: FontWeight.bold)),
+            leading: Image.asset("assets/images/language.png", width: 22, height: 22),
+            title:
+                const Text("Language", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             // onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
           ),
           ListTile(
-            leading: Image.asset("assets/images/rate_us.png", width: 24, height: 24),
-            title: const Text("Rate Us", style: TextStyle(fontWeight: FontWeight.bold)),
+            leading: Image.asset("assets/images/rate_us.png", width: 22, height: 22),
+            title:
+                const Text("Rate Us", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             // onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
           ),
           ListTile(
             // onTap: () => handleOpenInBrowser(
             //     "https://play.google.com/store/apps/developer?id=Think+Apps+Lab"),
-            leading: Image.asset("assets/images/share.png", width: 24, height: 24),
-            title: const Text("Share App", style: TextStyle(fontWeight: FontWeight.bold)),
+            leading: Image.asset("assets/images/share.png", width: 22, height: 22),
+            title: const Text("Share App",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             // onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
           ),
           ListTile(
             onTap: () =>
                 handleOpenInBrowser("https://sites.google.com/view/thinkappstudioprivacypolicy"),
-            leading: Image.asset("assets/images/privacy_policy.png", width: 24, height: 24),
-            title: const Text("Privacy Policy", style: TextStyle(fontWeight: FontWeight.bold)),
+            leading: Image.asset("assets/images/privacy_policy.png", width: 22, height: 22),
+            title: const Text("Privacy Policy",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             // onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
           ),
         ],

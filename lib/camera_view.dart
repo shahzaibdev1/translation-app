@@ -1,4 +1,3 @@
-import "dart:ui" as ui;
 import 'dart:io';
 
 import 'package:camera/camera.dart';

@@ -73,6 +73,8 @@ class DictionaryAutocompleteState extends State<DictionaryAutocomplete> {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     return Stack(clipBehavior: Clip.none, children: [
       TextField(
         controller: _controller,
@@ -114,11 +116,11 @@ class DictionaryAutocompleteState extends State<DictionaryAutocomplete> {
           //     child:
           Container(
               margin: const EdgeInsets.only(top: 65),
-              width: 200,
-              height: 300,
+              width: MediaQuery.of(context).size.width * 0.9,
+              // height: 300,
               padding: const EdgeInsets.all(10.0),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.colorScheme.onSecondary,
                 borderRadius: BorderRadius.circular(5.0),
                 // boxShadow: [
                 //   BoxShadow(

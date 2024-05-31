@@ -1,6 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.tal.translater.multi.language.scan">
     <application
-        android:label="translation_app"
+        android:label="Translate App"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -70,6 +70,10 @@ class _WordOfTheDayState extends State<WordOfTheDay> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: _listOfWordsInHistory
                       .map((item) => ListTile(
+                            onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ResultScreen(text: item["text"]))),
                             leading: const Icon(Icons.history),
                             title: Text(item["text"]),
                           ))
