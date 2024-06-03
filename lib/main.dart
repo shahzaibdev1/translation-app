@@ -23,17 +23,16 @@ class NavigationBarApp extends StatefulWidget {
 }
 
 class _NavigationBarAppState extends State<NavigationBarApp> {
-  bool isFirst = true;
+  late Future<void> _initialization;
 
   @override
   void initState() {
     super.initState();
+    _initialization = _loadResources();
+  }
 
-    Future.delayed(const Duration(seconds: 5), () {
-      setState(() {
-        isFirst = false;
-      });
-    });
+  Future<void> _loadResources() async {
+    await Future.delayed(const Duration(seconds: 5));
   }
 
   @override
@@ -74,45 +73,54 @@ class _NavigationBarAppState extends State<NavigationBarApp> {
                 //   }),
                 // ),
               ),
-        home: isFirst
-            ? Scaffold(
+        home: FutureBuilder<void>(
+          future: _initialization,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Scaffold(
                 body: Center(
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Text("Language Translator",
-                      style: TextStyle(
-                          fontSize: 34, fontWeight: FontWeight.bold, fontFamily: "Gordita Bold")),
-                  const Text("Communicate with the world",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  Container(
-                    margin: const EdgeInsets.only(top: 60),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Language Translator",
+                          style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: "Gordita Bold")),
+                      const Text("Communicate with the world",
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(width: 2, color: Colors.black),
+                        ),
+                        margin: const EdgeInsets.only(top: 60),
+                        width: MediaQuery.of(context).size.width * 0.7, // 70% of screen width
+                        height: MediaQuery.of(context).size.width * 0.7, // Make it a square
 
-                    width: MediaQuery.of(context).size.width * 0.7, // 70% of screen width
-                    height: MediaQuery.of(context).size.width * 0.7, // Make it a square
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(width: 2, color: Colors.black),
-                    ),
-                    padding: const EdgeInsets.all(10),
-                    child: const ContinuousSlider(),
+                        clipBehavior: Clip.antiAlias,
+                        child: const ContinuousSlider(),
+                      ),
+                      Container(
+                          padding: const EdgeInsets.all(10),
+                          margin: const EdgeInsets.symmetric(vertical: 30),
+                          width: 200,
+                          // clipBehavior: Clip.antiAlias,
+                          child: const LinearProgress()),
+                      const Text("Loading...",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontFamily: "Gordita Bold",
+                          ))
+                    ],
                   ),
-                  Container(
-                      margin: const EdgeInsets.symmetric(vertical: 30),
-                      width: 200,
-                      child: const LinearProgress()),
-                  const Text("Loading...",
-                      style: TextStyle(
-                        fontSize: 20,
-                        // fontWeight: FontWeight.bold,
-                        fontFamily: "Gordita Bold",
-                      ))
-                ]),
-              ))
-            :
-            // Container(width: MediaQuery.of(context).size.width * 0.6, child: ContinuousSlider()),
-
-            const Column(children: [
-                Expanded(child: NavigationExample()),
-              ]),
+                ),
+              );
+            } else {
+              return const NavigationExample();
+            }
+          },
+        ),
       );
     });
   }
@@ -129,7 +137,7 @@ class _NavigationExampleState extends State<NavigationExample> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    print(theme.navigationBarTheme.labelTextStyle);
+    // print(theme.navigationBarTheme.labelTextStyle);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,

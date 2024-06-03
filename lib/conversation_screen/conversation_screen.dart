@@ -362,6 +362,7 @@ class _ConversationState extends State<Conversation> {
                       ? Center(
                           child: SizedBox(
                               height: MediaQuery.of(context).size.height * 0.4,
+                              width: MediaQuery.of(context).size.width*0.9,
                               child: Column(children: [
                                 Center(child: Image.asset("assets/images/empty_conversation.png")),
                                 const SizedBox(height: 20),
@@ -478,10 +479,11 @@ class _ConversationState extends State<Conversation> {
                                 ? const SizedBox(
                                     width: 25, height: 25, child: CircularProgressIndicator())
                                 : Icon(Icons.mic, color: theme.colorScheme.onBackground),
-                            padding: const EdgeInsets.all(20)),
+                            padding: const EdgeInsets.all(20)
+                        ),
                         const Divider(),
                         SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.33,
+                          // width: MediaQuery.of(context).size.width * 0.33,
                           child: FilledButton.icon(
                               style: ButtonStyle(
                                   shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
@@ -511,7 +513,7 @@ class _ConversationState extends State<Conversation> {
                             padding: const EdgeInsets.all(20)),
                         const Divider(),
                         SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.33,
+                          // width: MediaQuery.of(context).size.width * 0.33,
                           child: FilledButton.icon(
                               style: ButtonStyle(
                                   shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
