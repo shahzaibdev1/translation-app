@@ -48,6 +48,16 @@ class ContinuousSliderState extends State<ContinuousSlider> with TickerProviderS
                   width: MediaQuery.of(context).size.width *
                       0.5, // Use MediaQuery.of(context).size.width
                 ),
+                Image.asset(
+                  "assets/images/map1.png",
+                  width: MediaQuery.of(context).size.width *
+                      0.5, // Use MediaQuery.of(context).size.width
+                ),
+                Image.asset(
+                  "assets/images/map2.png",
+                  width: MediaQuery.of(context).size.width *
+                      0.5, // Use MediaQuery.of(context).size.width
+                ),
               ],
             ));
       },

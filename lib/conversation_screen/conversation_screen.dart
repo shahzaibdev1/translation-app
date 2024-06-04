@@ -362,9 +362,12 @@ class _ConversationState extends State<Conversation> {
                       ? Center(
                           child: SizedBox(
                               height: MediaQuery.of(context).size.height * 0.4,
-                              width: MediaQuery.of(context).size.width*0.9,
+                              width: MediaQuery.of(context).size.width * 0.9,
                               child: Column(children: [
-                                Center(child: Image.asset("assets/images/empty_conversation.png")),
+                                Center(
+                                    child: Image.asset("assets/images/empty_conversation.png",
+                                        height: MediaQuery.of(context).size.height * 0.2,
+                                        fit: BoxFit.contain)),
                                 const SizedBox(height: 20),
                                 const Text("Conversation Translator",
                                     style: TextStyle(fontSize: 20, fontFamily: "Gordita Bold")),
@@ -479,8 +482,7 @@ class _ConversationState extends State<Conversation> {
                                 ? const SizedBox(
                                     width: 25, height: 25, child: CircularProgressIndicator())
                                 : Icon(Icons.mic, color: theme.colorScheme.onBackground),
-                            padding: const EdgeInsets.all(20)
-                        ),
+                            padding: const EdgeInsets.all(20)),
                         const Divider(),
                         SizedBox(
                           // width: MediaQuery.of(context).size.width * 0.33,
