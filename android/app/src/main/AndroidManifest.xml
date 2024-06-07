@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.tal.translater.multi.language.scan">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.tal.translater.multi.language.scan">
     <application
         android:label="Translate App"
         android:name="${applicationName}"
@@ -30,6 +31,9 @@
             android:name="flutterEmbedding"
             android:value="2" />
         <uses-library android:name="org.apache.http.legacy" android:required="false" />
-
     </application>
+
+    <uses-permission android:name="android.permission.RECORD_AUDIO" android:required="false" />
+    <uses-permission android:name="android.permission.CAMERA" android:required="false" />
+    <uses-permission android:name="android.permission.INTERNET" android:required="false" />
 </manifest>

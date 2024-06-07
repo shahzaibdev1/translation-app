@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+import 'package:provider/provider.dart';
 
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translation_app/conversation_screen/pressable_badge.dart';
 import 'package:translation_app/drawer/drawer.dart';
+import 'package:translation_app/providers/speech_to_text.dart';
 
 class Conversation extends StatefulWidget {
   const Conversation({super.key});
@@ -21,8 +23,8 @@ class _ConversationState extends State<Conversation> {
   TranslateLanguage firstMan = TranslateLanguage.english;
   TranslateLanguage secondMan = TranslateLanguage.spanish;
   int currentMan = 1;
-  bool is1Listening = false;
-  bool is2Listening = false;
+  // bool is1Listening = false;
+  // bool is2Listening = false;
   final FlutterTts _flutterTts = FlutterTts();
 
   final SpeechToText _speechToText = SpeechToText();
@@ -32,51 +34,80 @@ class _ConversationState extends State<Conversation> {
   TextEditingController toTextController = TextEditingController();
   bool isFromTextEmpty = true;
   bool isToTextEmpty = true;
+
+  final _modelManager = OnDeviceTranslatorModelManager();
+  bool isDownloading = false;
+
   @override
   void initState() {
     super.initState();
 
-    _initSpeech();
+    // _initSpeech();
   }
 
   /// This has to happen only once per app
-  void _initSpeech() async {
-    await _speechToText.initialize();
-
-    await _speechToText1.initialize();
-    setState(() {});
-  }
+  // void _initSpeech() async {
+  //   await _speechToText.initialize(onStatus: (status) {
+  //     print("object 1listening ${status}");
+  //     if (status == "listening") {
+  //       setState(() {
+  //         is1Listening = true;
+  //       });
+  //     } else if (status == "notListening") {
+  //       setState(() {
+  //         is1Listening = false;
+  //       });
+  //     }
+  //   }, onError: (errorNotification) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(errorNotification.errorMsg ?? "Something went wrong"),
+  //       ),
+  //     );
+  //   });
+  //
+  //   await _speechToText1.initialize(onStatus: (status) {
+  //     print("object 2listening ${status}");
+  //     if (status == "listening") {
+  //       setState(() {
+  //         is2Listening = true;
+  //       });
+  //     } else if (status == "notListening") {
+  //       setState(() {
+  //         is2Listening = false;
+  //       });
+  //     }
+  //   }, onError: (errorNotification) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(errorNotification.errorMsg ?? "Something went wrong"),
+  //       ),
+  //     );
+  //   });
+  //   setState(() {});
+  // }
 
   /// Each time to start a speech recognition session
-  void _startListening() async {
-    await _speechToText.listen(
-        onResult: _onSpeechResult,
-        listenOptions: SpeechListenOptions(partialResults: false, cancelOnError: true));
-
-    setState(() {
-      is1Listening = true;
-    });
+  void _startListening() {
+    Provider.of<SpeachToTextProvider>(context, listen: false)
+        .startListening(onResult: _onSpeechResult, idx: 2);
   }
 
   /// Manually stop the active speech recognition session
   /// Note that there are also timeouts that each platform enforces
   /// and the SpeechToText plugin supports setting timeouts on the
   /// listen method.
-  void _stopListening() async {
-    await _speechToText.stop();
-
-    setState(() {
-      is1Listening = false;
-    });
+  void _stopListening() {
+    Provider.of<SpeachToTextProvider>(context, listen: false).stopListening();
   }
 
   /// This is the callback that the SpeechToText plugin calls when
   /// the platform returns recognized words.
   void _onSpeechResult(SpeechRecognitionResult result) async {
     if (result.recognizedWords == "") {
-      setState(() {
-        is1Listening = false;
-      });
+      // setState(() {
+      //   is1Listening = false;
+      // });
       return;
     }
 
@@ -96,19 +127,18 @@ class _ConversationState extends State<Conversation> {
         "currentMan": "1"
       });
 
-      is1Listening = false;
+      // is1Listening = false;
     });
   }
 
   /// Each time to start a speech recognition session
   void _startListening1() async {
-    await _speechToText1.listen(
-        onResult: _onSpeechResult1,
-        listenOptions: SpeechListenOptions(partialResults: false, cancelOnError: true));
+    Provider.of<SpeachToTextProvider>(context, listen: false)
+        .startListening(onResult: _onSpeechResult1, idx: 3);
 
-    setState(() {
-      is2Listening = true;
-    });
+    // setState(() {
+    //   is2Listening = true;
+    // });
   }
 
   /// Manually stop the active speech recognition session
@@ -116,20 +146,16 @@ class _ConversationState extends State<Conversation> {
   /// and the SpeechToText plugin supports setting timeouts on the
   /// listen method.
   void _stopListening1() {
-    _speechToText1.stop();
-
-    setState(() {
-      is2Listening = false;
-    });
+    Provider.of<SpeachToTextProvider>(context, listen: false).stopListening();
   }
 
   /// This is the callback that the SpeechToText plugin calls when
   /// the platform returns recognized words.
   void _onSpeechResult1(SpeechRecognitionResult result) async {
     if (result.recognizedWords == "") {
-      setState(() {
-        is1Listening = false;
-      });
+      // setState(() {
+      //   is1Listening = false;
+      // });
       return;
     }
 
@@ -149,7 +175,7 @@ class _ConversationState extends State<Conversation> {
         "targetLang": secondMan,
       });
 
-      is1Listening = false;
+      // is1Listening = false;
     });
   }
 
@@ -204,19 +230,71 @@ class _ConversationState extends State<Conversation> {
   }
 
   void _onFromSelected(TranslateLanguage lang, BuildContext ctx) {
-    setState(() {
-      firstMan = lang;
-    });
+    try {
+      _modelManager.isModelDownloaded(lang.bcpCode).then((value) async {
+        if (!value) {
+          setState(() {
+            isDownloading = true;
+          });
+          var snackbar = ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Your language model is downloading...'),
+              duration: Duration(days: 3),
+            ),
+          );
 
-    Navigator.pop(ctx);
+          await _modelManager.downloadModel(lang.bcpCode);
+          setState(() {
+            isDownloading = false;
+          });
+          snackbar.close();
+        }
+      });
+
+      setState(() {
+        firstMan = lang;
+      });
+
+      Navigator.pop(ctx);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Something went wrong!')),
+      );
+    }
   }
 
   void _onToSelected(TranslateLanguage lang, BuildContext ctx) {
-    setState(() {
-      secondMan = lang;
-    });
+    try {
+      _modelManager.isModelDownloaded(lang.bcpCode).then((value) async {
+        if (!value) {
+          setState(() {
+            isDownloading = true;
+          });
+          var snackbar = ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Your language model is downloading...'),
+              duration: Duration(days: 3),
+            ),
+          );
 
-    Navigator.pop(ctx);
+          await _modelManager.downloadModel(lang.bcpCode);
+          setState(() {
+            isDownloading = false;
+          });
+          snackbar.close();
+        }
+      });
+
+      setState(() {
+        secondMan = lang;
+      });
+
+      Navigator.pop(ctx);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Something went wrong!')),
+      );
+    }
   }
 
   handleFromChange(String value) {
@@ -443,24 +521,6 @@ class _ConversationState extends State<Conversation> {
                                           )
                                         : const SizedBox.shrink(),
                                   ])),
-                          // Align(
-                          //   alignment: Alignment.centerLeft,
-                          //   child: Container(
-                          //     margin: const EdgeInsets.all(8.0),
-                          //     padding: const EdgeInsets.all(8.0),
-                          //     decoration: BoxDecoration(
-                          //       color: theme.colorScheme.primary,
-                          //       borderRadius: BorderRadius.circular(8.0),
-                          //     ),
-                          //     child: Text(
-                          //       messages[index]["translatedText"] != null
-                          //           ? messages[index]["translatedText"]!
-                          //           : "",
-                          //       style: theme.textTheme.bodyLarge!
-                          //           .copyWith(color: theme.colorScheme.onPrimary),
-                          //     ),
-                          //   ),
-                          // )
                         ]);
                       },
                     ),
@@ -477,11 +537,16 @@ class _ConversationState extends State<Conversation> {
                                 backgroundColor: MaterialStatePropertyAll(
                                     theme.colorScheme.primary.withAlpha(150))),
                             onPressed:
-                                _speechToText.isNotListening ? _startListening : _stopListening,
-                            icon: _speechToText.isListening
-                                ? const SizedBox(
-                                    width: 25, height: 25, child: CircularProgressIndicator())
-                                : Icon(Icons.mic, color: theme.colorScheme.onBackground),
+                                Provider.of<SpeachToTextProvider>(context).status == "listening" &&
+                                        Provider.of<SpeachToTextProvider>(context).idx == 2
+                                    ? _stopListening
+                                    : _startListening,
+                            icon:
+                                Provider.of<SpeachToTextProvider>(context).status == "listening" &&
+                                        Provider.of<SpeachToTextProvider>(context).idx == 2
+                                    ? const SizedBox(
+                                        width: 25, height: 25, child: CircularProgressIndicator())
+                                    : Icon(Icons.mic, color: theme.colorScheme.onBackground),
                             padding: const EdgeInsets.all(20)),
                         const Divider(),
                         SizedBox(
@@ -507,11 +572,16 @@ class _ConversationState extends State<Conversation> {
                                 backgroundColor: MaterialStatePropertyAll(
                                     theme.colorScheme.primary.withAlpha(150))),
                             onPressed:
-                                _speechToText1.isNotListening ? _startListening1 : _stopListening1,
-                            icon: _speechToText1.isListening
-                                ? const SizedBox(
-                                    width: 25, height: 25, child: CircularProgressIndicator())
-                                : Icon(Icons.mic, color: theme.colorScheme.onBackground),
+                                Provider.of<SpeachToTextProvider>(context).status == "listening" &&
+                                        Provider.of<SpeachToTextProvider>(context).idx == 3
+                                    ? _stopListening1
+                                    : _startListening1,
+                            icon:
+                                Provider.of<SpeachToTextProvider>(context).status == "listening" &&
+                                        Provider.of<SpeachToTextProvider>(context).idx == 3
+                                    ? const SizedBox(
+                                        width: 25, height: 25, child: CircularProgressIndicator())
+                                    : Icon(Icons.mic, color: theme.colorScheme.onBackground),
                             padding: const EdgeInsets.all(20)),
                         const Divider(),
                         SizedBox(

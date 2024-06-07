@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+import 'package:provider/provider.dart';
 import 'package:translation_app/TextRecognizer.dart';
 import 'package:translation_app/drawer/drawer.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:translation_app/providers/speech_to_text.dart';
 
 class TextScreen extends StatefulWidget {
   const TextScreen({super.key});
@@ -21,7 +23,7 @@ class _TextScreenState extends State<TextScreen> {
   TranslateLanguage _selectedFromLang = TranslateLanguage.english;
   TranslateLanguage _selectedToLang = TranslateLanguage.spanish;
   String _translatedText = "";
-  final SpeechToText _speechToText = SpeechToText();
+  // final SpeechToText _speechToText = SpeechToText();
   bool _speechEnabled = false;
   String _lastWords = '';
   final FlutterTts _flutterTts = FlutterTts();
@@ -31,6 +33,8 @@ class _TextScreenState extends State<TextScreen> {
   bool isFromTextEmpty = true;
   bool isToTextEmpty = true;
   final _modelManager = OnDeviceTranslatorModelManager();
+  bool isDownloading = false;
+  // bool isListening = false;
 
   @override
   void initState() {
@@ -38,15 +42,37 @@ class _TextScreenState extends State<TextScreen> {
     _initSpeech();
   }
 
+  @override
+  void dispose() {
+    // _speechToText.cancel();
+    super.dispose();
+  }
+
   /// This has to happen only once per app
   void _initSpeech() async {
-    _speechEnabled = await _speechToText.initialize();
-    setState(() {});
+    // _speechEnabled = await _speechToText.initialize(onStatus: (status) {
+    //   if (status == "listening") {
+    //     setState(() {
+    //       isListening = true;
+    //     });
+    //   } else if (status == "notListening") {
+    //     setState(() {
+    //       isListening = false;
+    //     });
+    //   }
+    // }, onError: (errorNotification) {
+    //   // ScaffoldMessenger.of(context).showSnackBar(
+    //   //   SnackBar(
+    //   //     content: Text(errorNotification.errorMsg ?? "Something went wrong"),
+    //   //   ),
+    //   // );
+    // });
   }
 
   /// Each time to start a speech recognition session
-  void _startListening() async {
-    await _speechToText.listen(onResult: _onSpeechResult);
+  void _startListening() {
+    Provider.of<SpeachToTextProvider>(context, listen: false)
+        .startListening(onResult: _onSpeechResult, idx: 1);
     setState(() {});
   }
 
@@ -54,15 +80,14 @@ class _TextScreenState extends State<TextScreen> {
   /// Note that there are also timeouts that each platform enforces
   /// and the SpeechToText plugin supports setting timeouts on the
   /// listen method.
-  void _stopListening() async {
-    await _speechToText.stop();
+  void _stopListening() {
+    Provider.of<SpeachToTextProvider>(context, listen: false).stopListening();
     setState(() {});
   }
 
   /// This is the callback that the SpeechToText plugin calls when
   /// the platform returns recognized words.
   void _onSpeechResult(SpeechRecognitionResult result) {
-    print(result.recognizedWords);
     setState(() {
       inputFieldController.text = result.recognizedWords;
       _lastWords = result.recognizedWords;
@@ -82,9 +107,15 @@ class _TextScreenState extends State<TextScreen> {
     });
   }
 
-  void _startSpeaking(text) {
-    _flutterTts.setLanguage(_selectedToLang.bcpCode);
-    _flutterTts.speak(text);
+  void _startSpeaking(text, String target) async {
+    await _flutterTts.setVolume(1.0);
+    if (target == "to") {
+      _flutterTts.setLanguage(_selectedToLang.bcpCode);
+      _flutterTts.speak(text);
+    } else if (target == "from") {
+      _flutterTts.setLanguage(_selectedFromLang.bcpCode);
+      _flutterTts.speak(text);
+    }
   }
 
   void _stopSpeaking(text) {
@@ -100,22 +131,71 @@ class _TextScreenState extends State<TextScreen> {
   }
 
   void _onFromSelected(TranslateLanguage lang, BuildContext ctx) {
-    setState(() {
-      _selectedFromLang = lang;
-    });
+    try {
+      _modelManager.isModelDownloaded(lang.bcpCode).then((value) async {
+        if (!value) {
+          setState(() {
+            isDownloading = true;
+          });
+          var snackbar = ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Your language model is downloading...'),
+              duration: Duration(days: 3),
+            ),
+          );
 
-    Navigator.pop(ctx);
+          await _modelManager.downloadModel(lang.bcpCode);
+          setState(() {
+            isDownloading = false;
+          });
+          snackbar.close();
+        }
+      });
+
+      setState(() {
+        _selectedFromLang = lang;
+      });
+
+      Navigator.pop(ctx);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Something went wrong!')),
+      );
+    }
   }
 
   void _onToSelected(TranslateLanguage lang, BuildContext ctx) {
-    _modelManager
-        .isModelDownloaded(lang.bcpCode)
-        .then((value) => value ? false : _modelManager.downloadModel(lang.bcpCode));
-    setState(() {
-      _selectedToLang = lang;
-    });
+    try {
+      _modelManager.isModelDownloaded(lang.bcpCode).then((value) async {
+        if (!value) {
+          setState(() {
+            isDownloading = true;
+          });
+          var snackbar = ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Your language model is downloading...'),
+              duration: Duration(days: 3),
+            ),
+          );
 
-    Navigator.pop(ctx);
+          await _modelManager.downloadModel(lang.bcpCode);
+          setState(() {
+            isDownloading = false;
+          });
+          snackbar.close();
+        }
+      });
+
+      setState(() {
+        _selectedToLang = lang;
+      });
+
+      Navigator.pop(ctx);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Something went wrong!')),
+      );
+    }
   }
 
   handleChange(String value) {
@@ -336,7 +416,7 @@ class _TextScreenState extends State<TextScreen> {
                               // Use Visibility for conditional visibility
                               visible: !isTextEmpty,
                               child: IconButton.filled(
-                                onPressed: () => _startSpeaking(inputFieldController.text),
+                                onPressed: () => _startSpeaking(inputFieldController.text, "from"),
                                 icon: SvgPicture.asset(
                                   "assets/images/speak.svg",
                                   colorFilter: ColorFilter.mode(
@@ -364,10 +444,12 @@ class _TextScreenState extends State<TextScreen> {
                                   },
                                   icon: const Icon(Icons.camera_alt)),
                               IconButton.filled(
-                                  onPressed: _speechToText.isNotListening
-                                      ? _startListening
-                                      : _stopListening,
-                                  icon: _speechToText.isListening
+                                  onPressed: Provider.of<SpeachToTextProvider>(context).status ==
+                                          "listening"
+                                      ? _stopListening
+                                      : _startListening,
+                                  icon: Provider.of<SpeachToTextProvider>(context).status ==
+                                          "listening"
                                       ? SizedBox(
                                           width: 20,
                                           height: 20,
@@ -412,7 +494,7 @@ class _TextScreenState extends State<TextScreen> {
                                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                               _translatedText != ""
                                   ? IconButton.filled(
-                                      onPressed: () => _startSpeaking(_translatedText),
+                                      onPressed: () => _startSpeaking(_translatedText, "to"),
                                       icon: SvgPicture.asset(
                                         "assets/images/speak.svg",
                                         colorFilter: ColorFilter.mode(

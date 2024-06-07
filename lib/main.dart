@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:translation_app/conversation_screen/conversation_screen.dart';
 import 'package:translation_app/dictionary/dictionary.dart';
 import 'package:translation_app/providers/navigation_status.dart';
+import 'package:translation_app/providers/speech_to_text.dart';
 import 'package:translation_app/providers/theme_provider.dart';
 import 'package:translation_app/text_screen/text_screen.dart';
 import 'package:translation_app/utils/linear_progress.dart';
@@ -13,6 +14,7 @@ import 'package:translation_app/utils/splash_screen.dart';
 void main() => runApp(MultiProvider(providers: [
       ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ChangeNotifierProvider(create: (_) => NavigationStatus()),
+      ChangeNotifierProvider(create: (_) => SpeachToTextProvider()),
     ], child: const NavigationBarApp()));
 
 class NavigationBarApp extends StatefulWidget {
@@ -37,8 +39,8 @@ class _NavigationBarAppState extends State<NavigationBarApp> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<ThemeProvider, NavigationStatus>(
-        builder: (context, themeProvider, navigationStatus, child) {
+    return Consumer3<ThemeProvider, NavigationStatus, SpeachToTextProvider>(
+        builder: (context, themeProvider, navigationStatus, speachToTextProvider, child) {
       return MaterialApp(
         theme: themeProvider.isDarkMode
             ? ThemeData.dark(useMaterial3: true).copyWith(
