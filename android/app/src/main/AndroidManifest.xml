@@ -33,7 +33,7 @@
         <uses-library android:name="org.apache.http.legacy" android:required="false" />
     </application>
 
-    <uses-permission android:name="android.permission.RECORD_AUDIO" android:required="false" />
-    <uses-permission android:name="android.permission.CAMERA" android:required="false" />
-    <uses-permission android:name="android.permission.INTERNET" android:required="false" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" android:required="true" />
+    <uses-permission android:name="android.permission.CAMERA" android:required="true" />
+    <uses-permission android:name="android.permission.INTERNET" android:required="true" />
 </manifest>
