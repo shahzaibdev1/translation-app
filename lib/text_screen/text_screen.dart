@@ -1,15 +1,22 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+import 'package:intl/intl.dart';
+// import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:provider/provider.dart';
 import 'package:translation_app/TextRecognizer.dart';
+import 'package:translation_app/db/db_helper.dart';
 import 'package:translation_app/drawer/drawer.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:speech_to_text/speech_to_text.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:share_plus/share_plus.dart';
+import 'package:translation_app/favorites/favorites.dart';
 import 'package:translation_app/providers/speech_to_text.dart';
+import 'package:translation_app/utils/utils.dart';
 
 class TextScreen extends StatefulWidget {
   const TextScreen({super.key});
@@ -20,8 +27,9 @@ class TextScreen extends StatefulWidget {
 
 class _TextScreenState extends State<TextScreen> {
   TextEditingController inputFieldController = TextEditingController();
-  TranslateLanguage _selectedFromLang = TranslateLanguage.english;
-  TranslateLanguage _selectedToLang = TranslateLanguage.spanish;
+  Map<String, String> _selectedFromLang = {"code": "auto", "name": "Detect Language"};
+  Map<String, String> _selectedToLang = {"code": "es", "name": "Spanish"};
+
   String _translatedText = "";
   // final SpeechToText _speechToText = SpeechToText();
   bool _speechEnabled = false;
@@ -32,14 +40,28 @@ class _TextScreenState extends State<TextScreen> {
   TextEditingController toTextController = TextEditingController();
   bool isFromTextEmpty = true;
   bool isToTextEmpty = true;
-  final _modelManager = OnDeviceTranslatorModelManager();
-  bool isDownloading = false;
+  // final _modelManager = OnDeviceTranslatorModelManager();
+  bool isLoading = false;
   // bool isListening = false;
+  List allFavs = [];
 
   @override
   void initState() {
     super.initState();
     _initSpeech();
+
+    getFavs();
+  }
+
+  void getFavs() async {
+    final dbHelper = FavDbHelper();
+
+    var allFavsFromDb = await dbHelper.getData();
+    print("allFavsFromDb: $allFavsFromDb");
+
+    setState(() {
+      allFavs = allFavsFromDb;
+    });
   }
 
   @override
@@ -94,26 +116,68 @@ class _TextScreenState extends State<TextScreen> {
     });
   }
 
+  Future<dynamic> fetchData(String text) async {
+    final response = await http.get(Uri.parse(
+        'https://lingva.ml/api/v1/${_selectedFromLang["code"]}/${_selectedToLang["code"]}/${text}'));
+
+    if (response.statusCode == 200 && text.isNotEmpty) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load translation');
+    }
+  }
+
   void translateText() async {
-    String text = inputFieldController.text;
-
-    final onDeviceTranslator =
-        OnDeviceTranslator(sourceLanguage: _selectedFromLang, targetLanguage: _selectedToLang);
-
-    final String translatedText = await onDeviceTranslator.translateText(text);
+    final ThemeData theme = Theme.of(context);
 
     setState(() {
-      _translatedText = translatedText;
+      isLoading = true;
     });
+
+    try {
+      String text = inputFieldController.text;
+      if (text.isEmpty) {
+        setState(() {
+          isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: theme.colorScheme.errorContainer,
+            content: Text('Text is empty!', style: TextStyle(color: theme.colorScheme.error)),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+        return;
+      }
+
+      var translatedObj = await fetchData(text);
+
+      if (translatedObj["translation"] != null) {
+        var translatedText = translatedObj["translation"];
+
+        // final onDeviceTranslator =
+        //     OnDeviceTranslator(sourceLanguage: _selectedFromLang, targetLanguage: _selectedToLang);
+
+        // final String translatedText = await onDeviceTranslator.translateText(text);
+
+        setState(() {
+          _translatedText = translatedText;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Something went wrong while translating text: $e");
+    }
   }
 
   void _startSpeaking(text, String target) async {
     await _flutterTts.setVolume(1.0);
     if (target == "to") {
-      _flutterTts.setLanguage(_selectedToLang.bcpCode);
+      _flutterTts.setLanguage(_selectedToLang["code"]!);
       _flutterTts.speak(text);
     } else if (target == "from") {
-      _flutterTts.setLanguage(_selectedFromLang.bcpCode);
+      _flutterTts.setLanguage(_selectedFromLang["code"]!);
       _flutterTts.speak(text);
     }
   }
@@ -130,27 +194,27 @@ class _TextScreenState extends State<TextScreen> {
     Clipboard.setData(ClipboardData(text: text));
   }
 
-  void _onFromSelected(TranslateLanguage lang, BuildContext ctx) {
+  void _onFromSelected(lang, BuildContext ctx) {
     try {
-      _modelManager.isModelDownloaded(lang.bcpCode).then((value) async {
-        if (!value) {
-          setState(() {
-            isDownloading = true;
-          });
-          var snackbar = ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Your language model is downloading...'),
-              duration: Duration(days: 3),
-            ),
-          );
+      // _modelManager.isModelDownloaded(lang.bcpCode).then((value) async {
+      //   if (!value) {
+      //     setState(() {
+      //       isDownloading = true;
+      //     });
+      //     var snackbar = ScaffoldMessenger.of(context).showSnackBar(
+      //       const SnackBar(
+      //         content: Text('Your language model is downloading...'),
+      //         duration: Duration(days: 3),
+      //       ),
+      //     );
 
-          await _modelManager.downloadModel(lang.bcpCode);
-          setState(() {
-            isDownloading = false;
-          });
-          snackbar.close();
-        }
-      });
+      //     await _modelManager.downloadModel(lang.bcpCode);
+      //     setState(() {
+      //       isDownloading = false;
+      //     });
+      //     snackbar.close();
+      //   }
+      // });
 
       setState(() {
         _selectedFromLang = lang;
@@ -164,27 +228,27 @@ class _TextScreenState extends State<TextScreen> {
     }
   }
 
-  void _onToSelected(TranslateLanguage lang, BuildContext ctx) {
+  void _onToSelected(lang, BuildContext ctx) {
     try {
-      _modelManager.isModelDownloaded(lang.bcpCode).then((value) async {
-        if (!value) {
-          setState(() {
-            isDownloading = true;
-          });
-          var snackbar = ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Your language model is downloading...'),
-              duration: Duration(days: 3),
-            ),
-          );
+      // _modelManager.isModelDownloaded(lang.bcpCode).then((value) async {
+      //   if (!value) {
+      //     setState(() {
+      //       isDownloading = true;
+      //     });
+      //     var snackbar = ScaffoldMessenger.of(context).showSnackBar(
+      //       const SnackBar(
+      //         content: Text('Your language model is downloading...'),
+      //         duration: Duration(days: 3),
+      //       ),
+      //     );
 
-          await _modelManager.downloadModel(lang.bcpCode);
-          setState(() {
-            isDownloading = false;
-          });
-          snackbar.close();
-        }
-      });
+      //     await _modelManager.downloadModel(lang.bcpCode);
+      //     setState(() {
+      //       isDownloading = false;
+      //     });
+      //     snackbar.close();
+      //   }
+      // });
 
       setState(() {
         _selectedToLang = lang;
@@ -254,13 +318,20 @@ class _TextScreenState extends State<TextScreen> {
                           ))),
                   const ListTile(title: Text("All Languages", style: TextStyle(fontSize: 20))),
                   const Divider(indent: 5),
-                  ...TranslateLanguage.values
-                      .where((element) => element.name.contains(fromTextController.text))
+                  ListTile(
+                      title: TextButton(
+                          style: const ButtonStyle(alignment: Alignment.centerLeft),
+                          onPressed: () =>
+                              _onFromSelected({"code": "auto", "name": "Detect Language"}, context),
+                          child: const Text("Detect Language"))),
+                  ...allLanguages
+                      .where((element) =>
+                          element["name"].startsWith(fromTextController.text.toLowerCase()))
                       .map((title) => ListTile(
                           title: TextButton(
                               style: const ButtonStyle(alignment: Alignment.centerLeft),
                               onPressed: () => _onFromSelected(title, ctx),
-                              child: Text(title.name))))
+                              child: Text(title["name"]))))
                       .toList()
                 ]),
               );
@@ -309,17 +380,37 @@ class _TextScreenState extends State<TextScreen> {
                           ))),
                   const ListTile(title: Text("All Languages", style: TextStyle(fontSize: 20))),
                   const Divider(indent: 5),
-                  ...TranslateLanguage.values
-                      .where((element) => element.name.contains(toTextController.text))
+                  ...allLanguages
+                      .where((element) =>
+                          element["name"].startsWith(toTextController.text.toLowerCase()))
                       .map((title) => ListTile(
                           title: TextButton(
                               style: const ButtonStyle(alignment: Alignment.centerLeft),
                               onPressed: () => _onToSelected(title, ctx),
-                              child: Text(title.name))))
+                              child: Text(title["name"]))))
                       .toList()
                 ]),
               );
             }));
+  }
+
+  void addToFav() async {
+    // _translatedText
+    // inputFieldController.text
+    DateTime time = DateTime.now();
+    final dbHelper = FavDbHelper();
+
+    dbHelper.insertData({
+      "text": inputFieldController.text,
+      "translation": _translatedText,
+      'time': DateFormat("dd MMM yyyy, hh:mm a").format(time),
+    });
+
+    var allFavsFromDb = await dbHelper.getData();
+
+    setState(() {
+      allFavs = allFavsFromDb;
+    });
   }
 
   @override
@@ -331,7 +422,23 @@ class _TextScreenState extends State<TextScreen> {
         appBar: AppBar(
           title: const Text("Translator"),
           actions: [
-            IconButton(onPressed: () {}, icon: const Icon(Icons.star_rounded), iconSize: 30)
+            IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return Builder(
+                          builder: (context) {
+                            return const Favorites();
+                          },
+                        );
+                      },
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.star_rounded),
+                iconSize: 30)
           ],
         ),
         body: SingleChildScrollView(
@@ -360,7 +467,7 @@ class _TextScreenState extends State<TextScreen> {
                                         backgroundColor:
                                             MaterialStatePropertyAll(Colors.blue.shade200)),
                                     onPressed: () => _showFrom(context),
-                                    label: Text(_selectedFromLang.name),
+                                    label: Text(_selectedFromLang["name"]!),
                                     icon: const Icon(Icons.arrow_drop_down)),
                               ),
                               SizedBox(
@@ -380,7 +487,7 @@ class _TextScreenState extends State<TextScreen> {
                                         backgroundColor:
                                             MaterialStatePropertyAll(Colors.blue.shade200)),
                                     onPressed: () => _showTo(context),
-                                    label: Text(_selectedToLang.name),
+                                    label: Text(_selectedToLang["name"]!),
                                     icon: const Icon(Icons.arrow_drop_down)),
                               ),
                               // _buildToDropdown(),
@@ -505,6 +612,16 @@ class _TextScreenState extends State<TextScreen> {
                                 children: [
                                   IconButton.filled(
                                       onPressed: () {
+                                        addToFav();
+                                      },
+                                      icon: Icon(allFavs
+                                              .where((element) =>
+                                                  element["translation"] == _translatedText)
+                                              .isEmpty
+                                          ? Icons.star_border
+                                          : Icons.star)),
+                                  IconButton.filled(
+                                      onPressed: () {
                                         copyText(_translatedText);
                                       },
                                       icon: const Icon(Icons.copy)),
@@ -524,7 +641,7 @@ class _TextScreenState extends State<TextScreen> {
         ));
   }
 
-  Widget _buildDropdown() => DropdownButton<TranslateLanguage>(
+  Widget _buildDropdown() => DropdownButton(
         value: _selectedFromLang,
         icon: const Icon(Icons.arrow_downward),
         elevation: 16,
@@ -533,24 +650,24 @@ class _TextScreenState extends State<TextScreen> {
           height: 2,
           color: Colors.blue,
         ),
-        onChanged: (TranslateLanguage? script) {
+        onChanged: (script) {
           if (script != null) {
             setState(() {
               _selectedFromLang = script;
             });
           }
         },
-        items: TranslateLanguage.values.map<DropdownMenuItem<TranslateLanguage>>((script) {
-          return DropdownMenuItem<TranslateLanguage>(
+        items: allLanguages.map<DropdownMenuItem>((script) {
+          return DropdownMenuItem(
             value: script,
-            child: Text(script.name.isNotEmpty
-                ? script.name[0].toUpperCase() + script.name.substring(1)
-                : script.name),
+            child: Text(script["name"]!.isNotEmpty
+                ? script["name"]![0].toUpperCase() + script["name"]!.substring(1)
+                : script["name"]!),
           );
         }).toList(),
       );
 
-  Widget _buildToDropdown() => DropdownButton<TranslateLanguage>(
+  Widget _buildToDropdown() => DropdownButton(
         value: _selectedToLang,
         icon: const Icon(Icons.arrow_downward),
         elevation: 16,
@@ -559,19 +676,19 @@ class _TextScreenState extends State<TextScreen> {
           height: 2,
           color: Colors.blue,
         ),
-        onChanged: (TranslateLanguage? script) {
+        onChanged: (script) {
           if (script != null) {
             setState(() {
               _selectedToLang = script;
             });
           }
         },
-        items: TranslateLanguage.values.map<DropdownMenuItem<TranslateLanguage>>((script) {
-          return DropdownMenuItem<TranslateLanguage>(
+        items: allLanguages.map<DropdownMenuItem>((script) {
+          return DropdownMenuItem(
             value: script,
-            child: Text(script.name.isNotEmpty
-                ? script.name[0].toUpperCase() + script.name.substring(1)
-                : script.name),
+            child: Text(script["name"]!.isNotEmpty
+                ? script["name"]![0].toUpperCase() + script["name"]!.substring(1)
+                : script["name"]!),
           );
         }).toList(),
       );

@@ -1,14 +1,18 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+// import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translation_app/conversation_screen/pressable_badge.dart';
 import 'package:translation_app/drawer/drawer.dart';
 import 'package:translation_app/providers/speech_to_text.dart';
+import 'package:translation_app/utils/utils.dart';
 
 class Conversation extends StatefulWidget {
   const Conversation({super.key});
@@ -20,8 +24,8 @@ class Conversation extends StatefulWidget {
 class _ConversationState extends State<Conversation> {
   final TextEditingController chatTextController = TextEditingController();
   List<Map<String, dynamic>> messages = [];
-  TranslateLanguage firstMan = TranslateLanguage.english;
-  TranslateLanguage secondMan = TranslateLanguage.spanish;
+  Map<String, String> firstMan = {"code": "auto", "name": "Detect Language"};
+  Map<String, String> secondMan = {"code": "es", "name": "Spanish"};
   int currentMan = 1;
   // bool is1Listening = false;
   // bool is2Listening = false;
@@ -35,7 +39,7 @@ class _ConversationState extends State<Conversation> {
   bool isFromTextEmpty = true;
   bool isToTextEmpty = true;
 
-  final _modelManager = OnDeviceTranslatorModelManager();
+  // final _modelManager = OnDeviceTranslatorModelManager();
   bool isDownloading = false;
 
   @override
@@ -113,22 +117,38 @@ class _ConversationState extends State<Conversation> {
 
     String text = result.recognizedWords;
 
-    final onDeviceTranslator =
-        OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
+    // final onDeviceTranslator =
+    //     OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
 
-    final String translatedText = await onDeviceTranslator.translateText(text);
+    // final String translatedText = await onDeviceTranslator.translateText(text);
+    var translatedObj = await fetchData(text);
 
-    setState(() {
-      messages.add({
-        "text": result.recognizedWords,
-        "translatedText": translatedText,
-        "originLang": firstMan,
-        "targetLang": secondMan,
-        "currentMan": "1"
+    if (translatedObj["translation"] != null) {
+      var translatedText = translatedObj["translation"];
+
+      setState(() {
+        messages.add({
+          "text": result.recognizedWords,
+          "translatedText": translatedText,
+          "originLang": firstMan,
+          "targetLang": secondMan,
+          "currentMan": "1"
+        });
+
+        // is1Listening = false;
       });
+    }
+  }
 
-      // is1Listening = false;
-    });
+  Future<dynamic> fetchData(String text) async {
+    final response = await http.get(
+        Uri.parse('https://lingva.ml/api/v1/${firstMan["code"]}/${secondMan["code"]}/${text}'));
+
+    if (response.statusCode == 200 && text.isNotEmpty) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load suggestions');
+    }
   }
 
   /// Each time to start a speech recognition session
@@ -161,22 +181,27 @@ class _ConversationState extends State<Conversation> {
 
     String text = result.recognizedWords;
 
-    final onDeviceTranslator =
-        OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
+    // final onDeviceTranslator =
+    //     OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
 
-    final String translatedText = await onDeviceTranslator.translateText(text);
+    // final String translatedText = await onDeviceTranslator.translateText(text);
+    var translatedObj = await fetchData(text);
 
-    setState(() {
-      messages.add({
-        "text": result.recognizedWords,
-        "translatedText": translatedText,
-        "currentMan": "2",
-        "originLang": firstMan,
-        "targetLang": secondMan,
+    if (translatedObj["translation"] != null) {
+      var translatedText = translatedObj["translation"];
+
+      setState(() {
+        messages.add({
+          "text": result.recognizedWords,
+          "translatedText": translatedText,
+          "currentMan": "2",
+          "originLang": firstMan,
+          "targetLang": secondMan,
+        });
+
+        // is1Listening = false;
       });
-
-      // is1Listening = false;
-    });
+    }
   }
 
   void handleChange() async {
@@ -184,72 +209,81 @@ class _ConversationState extends State<Conversation> {
     if (text == "") return;
 
     if (currentMan == 1) {
-      final onDeviceTranslator =
-          OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
+      // final onDeviceTranslator =
+      //     OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
 
-      final String translatedText = await onDeviceTranslator.translateText(text);
+      // final String translatedText = await onDeviceTranslator.translateText(text);
+      var translatedObj = await fetchData(text);
 
-      setState(() {
-        messages.add({
-          "text": text,
-          "translatedText": translatedText,
-          "currentMan": currentMan.toString(),
-          "originLang": firstMan,
-          "targetLang": secondMan,
+      if (translatedObj["translation"] != null) {
+        var translatedText = translatedObj["translation"];
+
+        setState(() {
+          messages.add({
+            "text": text,
+            "translatedText": translatedText,
+            "currentMan": currentMan.toString(),
+            "originLang": firstMan,
+            "targetLang": secondMan,
+          });
         });
-      });
-
+      }
       chatTextController.clear();
     } else if (currentMan == 2) {
-      final onDeviceTranslator =
-          OnDeviceTranslator(sourceLanguage: secondMan, targetLanguage: firstMan);
+      // final onDeviceTranslator =
+      //     OnDeviceTranslator(sourceLanguage: secondMan, targetLanguage: firstMan);
 
-      final String translatedText = await onDeviceTranslator.translateText(text);
+      // final String translatedText = await onDeviceTranslator.translateText(text);
+      var translatedObj = await fetchData(text);
 
-      setState(() {
-        messages.add({
-          "text": text,
-          "translatedText": translatedText,
-          "currentMan": currentMan.toString(),
-          "originLang": firstMan,
-          "targetLang": secondMan,
+      if (translatedObj["translation"] != null) {
+        var translatedText = translatedObj["translation"];
+
+        setState(() {
+          messages.add({
+            "text": text,
+            "translatedText": translatedText,
+            "currentMan": currentMan.toString(),
+            "originLang": firstMan,
+            "targetLang": secondMan,
+          });
         });
-      });
 
-      chatTextController.clear();
+        chatTextController.clear();
+      }
     }
 
     return;
   }
 
-  void _start_speaking(String text, TranslateLanguage? lang) {
+  void _start_speaking(String text, lang) {
     if (lang != null) {
-      _flutterTts.setLanguage(lang.bcpCode);
+      _flutterTts.setLanguage(lang["code"]);
     }
     _flutterTts.speak(text);
   }
 
-  void _onFromSelected(TranslateLanguage lang, BuildContext ctx) {
+  void _onFromSelected(lang, BuildContext ctx) {
     try {
-      _modelManager.isModelDownloaded(lang.bcpCode).then((value) async {
-        if (!value) {
-          setState(() {
-            isDownloading = true;
-          });
-          var snackbar = ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Your language model is downloading...'),
-              duration: Duration(days: 3),
-            ),
-          );
+      // _modelManager.isModelDownloaded(lang["code"]).then((value) async {
+      //   if (!value) {
+      //     setState(() {
+      //       isDownloading = true;
+      //     });
+      //     var snackbar = ScaffoldMessenger.of(context).showSnackBar(
+      //       const SnackBar(
+      //         content: Text('Your language model is downloading...'),
+      //         duration: Duration(days: 3),
+      //       ),
+      //     );
 
-          await _modelManager.downloadModel(lang.bcpCode);
-          setState(() {
-            isDownloading = false;
-          });
-          snackbar.close();
-        }
-      });
+      //     await _modelManager.downloadModel(lang["code"]);
+      //     setState(() {
+      //       isDownloading = false;
+      //     });
+      //     snackbar.close();
+      //   }
+      // });
 
       setState(() {
         firstMan = lang;
@@ -263,27 +297,27 @@ class _ConversationState extends State<Conversation> {
     }
   }
 
-  void _onToSelected(TranslateLanguage lang, BuildContext ctx) {
+  void _onToSelected(lang, BuildContext ctx) {
     try {
-      _modelManager.isModelDownloaded(lang.bcpCode).then((value) async {
-        if (!value) {
-          setState(() {
-            isDownloading = true;
-          });
-          var snackbar = ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Your language model is downloading...'),
-              duration: Duration(days: 3),
-            ),
-          );
+      // _modelManager.isModelDownloaded(lang["code"]).then((value) async {
+      //   if (!value) {
+      //     setState(() {
+      //       isDownloading = true;
+      //     });
+      //     var snackbar = ScaffoldMessenger.of(context).showSnackBar(
+      //       const SnackBar(
+      //         content: Text('Your language model is downloading...'),
+      //         duration: Duration(days: 3),
+      //       ),
+      //     );
 
-          await _modelManager.downloadModel(lang.bcpCode);
-          setState(() {
-            isDownloading = false;
-          });
-          snackbar.close();
-        }
-      });
+      //     await _modelManager.downloadModel(lang["code"]);
+      //     setState(() {
+      //       isDownloading = false;
+      //     });
+      //     snackbar.close();
+      //   }
+      // });
 
       setState(() {
         secondMan = lang;
@@ -353,13 +387,20 @@ class _ConversationState extends State<Conversation> {
                           ))),
                   const ListTile(title: Text("All Languages", style: TextStyle(fontSize: 20))),
                   const Divider(indent: 5),
-                  ...TranslateLanguage.values
-                      .where((element) => element.name.contains(fromTextController.text))
+                  ListTile(
+                      title: TextButton(
+                          style: const ButtonStyle(alignment: Alignment.centerLeft),
+                          onPressed: () =>
+                              _onFromSelected({"code": "auto", "name": "Detect Language"}, context),
+                          child: const Text("Detect Language"))),
+                  ...allLanguages
+                      .where((element) =>
+                          element["name"].startsWith(fromTextController.text.toLowerCase()))
                       .map((title) => ListTile(
                           title: TextButton(
                               style: const ButtonStyle(alignment: Alignment.centerLeft),
                               onPressed: () => _onFromSelected(title, ctx),
-                              child: Text(title.name))))
+                              child: Text(title["name"]))))
                       .toList()
                 ]),
               );
@@ -408,13 +449,14 @@ class _ConversationState extends State<Conversation> {
                           ))),
                   const ListTile(title: Text("All Languages", style: TextStyle(fontSize: 20))),
                   const Divider(indent: 5),
-                  ...TranslateLanguage.values
-                      .where((element) => element.name.contains(toTextController.text))
+                  ...allLanguages
+                      .where((element) =>
+                          element["name"].startsWith(toTextController.text.toLowerCase()))
                       .map((title) => ListTile(
                           title: TextButton(
                               style: const ButtonStyle(alignment: Alignment.centerLeft),
                               onPressed: () => _onToSelected(title, ctx),
-                              child: Text(title.name))))
+                              child: Text(title["name"]))))
                       .toList()
                 ]),
               );
@@ -559,7 +601,7 @@ class _ConversationState extends State<Conversation> {
                                   foregroundColor: const MaterialStatePropertyAll(Colors.black),
                                   backgroundColor: MaterialStatePropertyAll(Colors.blue.shade200)),
                               onPressed: () => _showFrom(context),
-                              label: Text(firstMan.name),
+                              label: Text(firstMan["name"]!),
                               icon: const Icon(Icons.arrow_drop_down)),
                         ),
                       ],
@@ -594,7 +636,7 @@ class _ConversationState extends State<Conversation> {
                                   foregroundColor: const MaterialStatePropertyAll(Colors.black),
                                   backgroundColor: MaterialStatePropertyAll(Colors.blue.shade200)),
                               onPressed: () => _showTo(context),
-                              label: Text(secondMan.name),
+                              label: Text(secondMan["name"]!),
                               icon: const Icon(Icons.arrow_drop_down)),
                         ),
                       ],
@@ -637,7 +679,7 @@ class _ConversationState extends State<Conversation> {
     );
   }
 
-  Widget _buildDropdown() => DropdownButton<TranslateLanguage>(
+  Widget _buildDropdown() => DropdownButton(
         value: firstMan,
         icon: const Icon(Icons.arrow_downward),
         elevation: 16,
@@ -646,24 +688,24 @@ class _ConversationState extends State<Conversation> {
           height: 2,
           color: Colors.blue,
         ),
-        onChanged: (TranslateLanguage? script) {
+        onChanged: (script) {
           if (script != null) {
             setState(() {
               firstMan = script;
             });
           }
         },
-        items: TranslateLanguage.values.map<DropdownMenuItem<TranslateLanguage>>((script) {
-          return DropdownMenuItem<TranslateLanguage>(
+        items: allLanguages.map<DropdownMenuItem>((script) {
+          return DropdownMenuItem(
             value: script,
-            child: Text(script.name.isNotEmpty
-                ? script.name[0].toUpperCase() + script.name.substring(1)
-                : script.name),
+            child: Text(script["name"].isNotEmpty
+                ? script["name"][0].toUpperCase() + script["name"].substring(1)
+                : script["name"]),
           );
         }).toList(),
       );
 
-  Widget _buildToDropdown() => DropdownButton<TranslateLanguage>(
+  Widget _buildToDropdown() => DropdownButton(
         value: secondMan,
         icon: const Icon(Icons.arrow_downward),
         elevation: 16,
@@ -672,19 +714,19 @@ class _ConversationState extends State<Conversation> {
           height: 2,
           color: Colors.blue,
         ),
-        onChanged: (TranslateLanguage? script) {
+        onChanged: (script) {
           if (script != null) {
             setState(() {
               secondMan = script;
             });
           }
         },
-        items: TranslateLanguage.values.map<DropdownMenuItem<TranslateLanguage>>((script) {
-          return DropdownMenuItem<TranslateLanguage>(
+        items: allLanguages.map<DropdownMenuItem>((script) {
+          return DropdownMenuItem(
             value: script,
-            child: Text(script.name.isNotEmpty
-                ? script.name[0].toUpperCase() + script.name.substring(1)
-                : script.name),
+            child: Text(script["name"].isNotEmpty
+                ? script["name"][0].toUpperCase() + script["name"].substring(1)
+                : script["name"]),
           );
         }).toList(),
       );

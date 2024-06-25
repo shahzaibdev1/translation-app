@@ -4,7 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+import 'package:http/http.dart' as http;
+// import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'utils/utils.dart';
@@ -22,8 +23,8 @@ class GalleryView extends StatefulWidget {
       : super(key: key);
 
   final TextRecognizer recognizer;
-  final TranslateLanguage fromLang;
-  final TranslateLanguage targetLang;
+  final Map<String, String> fromLang;
+  final Map<String, String> targetLang;
   final String title;
   final String? text;
   final Function(InputImage inputImage) onImage;
@@ -49,23 +50,38 @@ class _GalleryViewState extends State<GalleryView> {
           widget.text != null) {
         // Run your function here
         if (widget.text != null) {
-          final TranslateLanguage sourceLang = widget.fromLang;
-          final TranslateLanguage targetLang = widget.targetLang;
+          final Map<String, String> sourceLang = widget.fromLang;
+          final Map<String, String> targetLang = widget.targetLang;
 
-          final onDeviceTranslator =
-              OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
+          // final onDeviceTranslator =
+          //     OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
 
-          var translatedText = await onDeviceTranslator
-              .translateText(widget.text!.replaceFirst('Recognized text:', '').trim());
+          // var translatedText = await onDeviceTranslator
+          //     .translateText(widget.text!.replaceFirst('Recognized text:', '').trim());
+          var translatedObj = await fetchData(sourceLang, targetLang, widget.text!);
+          if (translatedObj && translatedObj["translation"] != null) {
+            var translatedText = translatedObj["translation"];
 
-          setState(() {
-            text = translatedText;
-          });
+            setState(() {
+              text = translatedText;
+            });
+          }
         }
       }
     }
 
     onUpdateWidget();
+  }
+
+  Future<dynamic> fetchData(selectedFromLang, selectedToLang, String text) async {
+    final response = await http.get(Uri.parse(
+        'https://lingva.ml/api/v1/${selectedFromLang["code"]}/${selectedToLang["code"]}/$text'));
+
+    if (response.statusCode == 200 && text.isNotEmpty) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load translation');
+    }
   }
 
   @override

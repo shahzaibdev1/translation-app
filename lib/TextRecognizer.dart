@@ -1,7 +1,12 @@
+import 'dart:convert';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+import 'package:http/http.dart' as http;
+
+import 'package:translation_app/utils/utils.dart';
+// import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 
 import 'detector_view.dart';
 import 'painters/text_detector_painter.dart';
@@ -11,105 +16,105 @@ const List<Map<String, dynamic>> fromLanguages = [
     "lang": 0,
     "label": "English",
     "orig": TextRecognitionScript.latin,
-    "target": TranslateLanguage.english
+    "target": {"code": "auto", "name": "Detect"},
   },
   {
     "lang": 1,
     "label": "Spanish",
     "orig": TextRecognitionScript.latin,
-    "target": TranslateLanguage.spanish
+    "target": {"code": "es", "name": "Spanish"},
   },
   {
     "lang": 2,
     "label": "French",
     "orig": TextRecognitionScript.latin,
-    "target": TranslateLanguage.french
+    "target": {"code": "fr", "name": "French"},
   },
   {
     "lang": 3,
     "label": "Portuguese",
     "orig": TextRecognitionScript.latin,
-    "target": TranslateLanguage.portuguese
+    "target": {"code": "pt", "name": "Portuguese"},
   },
   {
     "lang": 4,
     "label": "Italian",
     "orig": TextRecognitionScript.latin,
-    "target": TranslateLanguage.italian
+    "target": {"code": "it", "name": "Italian"},
   },
   {
     "lang": 5,
     "label": "Romanian",
     "orig": TextRecognitionScript.latin,
-    "target": TranslateLanguage.romanian
+    "target": {"code": "ro", "name": "Romanian"},
   },
   {
     "lang": 6,
     "label": "German",
     "orig": TextRecognitionScript.latin,
-    "target": TranslateLanguage.german
+    "target": {"code": "de", "name": "German"},
   },
   {
     "lang": 7,
     "label": "Polish",
     "orig": TextRecognitionScript.latin,
-    "target": TranslateLanguage.polish
+    "target": {"code": "pl", "name": "Polish"},
   },
   {
     "lang": 8,
     "label": "Croatian",
     "orig": TextRecognitionScript.latin,
-    "target": TranslateLanguage.croatian
+    "target": {"code": "hr", "name": "Croatian"},
   },
   {
     "lang": 9,
     "label": "Czech",
     "orig": TextRecognitionScript.latin,
-    "target": TranslateLanguage.czech
+    "target": {"code": "cs", "name": "Czech"},
   },
   {
     "lang": 10,
     "label": "Japanese",
     "orig": TextRecognitionScript.japanese,
-    "target": TranslateLanguage.japanese
+    "target": {"code": "ja", "name": "Japanese"},
   },
   {
     "lang": 11,
     "label": "Chinese",
     "orig": TextRecognitionScript.chinese,
-    "target": TranslateLanguage.chinese
+    "target": {"code": "zh", "name": "Chinese"},
   },
   {
     "lang": 12,
     "label": "Korean",
     "orig": TextRecognitionScript.korean,
-    "target": TranslateLanguage.korean
+    "target": {"code": "ko", "name": "Korean"},
   },
   {
     "lang": 13,
     "label": "Hindi",
     "orig": TextRecognitionScript.devanagiri,
-    "target": TranslateLanguage.hindi
+    "target": {"code": "hi", "name": "Hindi"},
   },
 ];
 
-const List<Map<String, dynamic>> targetLanguages = [
-  {"lang": 0, "label": "English", "target": TranslateLanguage.english},
-  {"lang": 1, "label": "Spanish", "target": TranslateLanguage.spanish},
-  {"lang": 2, "label": "French", "target": TranslateLanguage.french},
-  {"lang": 3, "label": "Urdu", "target": TranslateLanguage.urdu},
-  {"lang": 4, "label": "Arabic", "target": TranslateLanguage.arabic},
-  {"lang": 5, "label": "Japanese", "target": TranslateLanguage.japanese},
-  {"lang": 6, "label": "Chinese", "target": TranslateLanguage.chinese},
-  {"lang": 7, "label": "Polish", "target": TranslateLanguage.polish},
-  {"lang": 8, "label": "Croatian", "target": TranslateLanguage.croatian},
-  {"lang": 9, "label": "Czech", "target": TranslateLanguage.czech},
-  {"lang": 10, "label": "Japanese", "target": TranslateLanguage.japanese},
-  {"lang": 11, "label": "Chinese", "target": TranslateLanguage.chinese},
-  {"lang": 12, "label": "Korean", "target": TranslateLanguage.korean},
-  {"lang": 13, "label": "Hindi", "target": TranslateLanguage.hindi},
-  {"lang": 14, "label": "German", "target": TranslateLanguage.german},
-];
+// const List<Map<String, dynamic>> targetLanguages = [
+//   {"lang": 0, "label": "English", "target": TranslateLanguage.english},
+//   {"lang": 1, "label": "Spanish", "target": TranslateLanguage.spanish},
+//   {"lang": 2, "label": "French", "target": TranslateLanguage.french},
+//   {"lang": 3, "label": "Urdu", "target": TranslateLanguage.urdu},
+//   {"lang": 4, "label": "Arabic", "target": TranslateLanguage.arabic},
+//   {"lang": 5, "label": "Japanese", "target": TranslateLanguage.japanese},
+//   {"lang": 6, "label": "Chinese", "target": TranslateLanguage.chinese},
+//   {"lang": 7, "label": "Polish", "target": TranslateLanguage.polish},
+//   {"lang": 8, "label": "Croatian", "target": TranslateLanguage.croatian},
+//   {"lang": 9, "label": "Czech", "target": TranslateLanguage.czech},
+//   {"lang": 10, "label": "Japanese", "target": TranslateLanguage.japanese},
+//   {"lang": 11, "label": "Chinese", "target": TranslateLanguage.chinese},
+//   {"lang": 12, "label": "Korean", "target": TranslateLanguage.korean},
+//   {"lang": 13, "label": "Hindi", "target": TranslateLanguage.hindi},
+//   {"lang": 14, "label": "German", "target": TranslateLanguage.german},
+// ];
 
 class TextRecognizerView extends StatefulWidget {
   const TextRecognizerView({super.key});
@@ -123,7 +128,7 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
   bool _canProcess = true;
   int _selectedLanguage = 0; // Initialize _selectedLanguage with default value
   // int _selectedTargetLanguage = 1; // Initialize _selectedLanguage with default value
-  TranslateLanguage toLanguage = TranslateLanguage.spanish;
+  Map<String, String> toLanguage = {"code": "es", "name": "Spanish"};
   bool isTextEmpty = true;
   TextEditingController fromTextController = TextEditingController();
   TextEditingController toTextController = TextEditingController();
@@ -135,8 +140,8 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
   var _cameraLensDirection = CameraLensDirection.back;
 
   TextEditingController inputFieldController = TextEditingController();
-  TranslateLanguage _selectedFromLang = TranslateLanguage.english;
-  TranslateLanguage _selectedToLang = TranslateLanguage.spanish;
+  Map<String, String> _selectedFromLang = {"code": "auto", "name": "Detect Language"};
+  Map<String, String> _selectedToLang = {"code": "es", "name": "Spanish"};
   // String _translatedText = "";
 
   @override
@@ -196,7 +201,7 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
                                 foregroundColor: const MaterialStatePropertyAll(Colors.black),
                                 backgroundColor: MaterialStatePropertyAll(Colors.blue.shade200)),
                             onPressed: () => _showFromBottom(context),
-                            label: Text(_selectedFromLang.name),
+                            label: Text(_selectedFromLang["name"]!),
                             icon: const Icon(Icons.arrow_drop_down)),
                   ),
 
@@ -222,7 +227,7 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
                                     backgroundColor:
                                         MaterialStatePropertyAll(Colors.blue.shade200)),
                                 onPressed: () => _showTo(context),
-                                label: Text(_selectedToLang.name),
+                                label: Text(_selectedToLang["name"]!),
                                 icon: const Icon(Icons.arrow_drop_down)),
                           ))),
                 ]),
@@ -274,10 +279,15 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
                           ))),
                   const ListTile(title: Text("All Languages", style: TextStyle(fontSize: 20))),
                   const Divider(indent: 5),
+                  ListTile(
+                      title: TextButton(
+                          style: const ButtonStyle(alignment: Alignment.centerLeft),
+                          onPressed: () => _onToSelected("auto", 0, ctx),
+                          child: const Text("Detect Language"))),
                   ...fromLanguages
                       .where((element) => element["label"]
                           .toLowerCase()
-                          .contains(fromTextController.text.toLowerCase()))
+                          .startsWith(fromTextController.text.toLowerCase()))
                       .map((title) => ListTile(
                           title: TextButton(
                               style: const ButtonStyle(alignment: Alignment.centerLeft),
@@ -289,7 +299,7 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
             }));
   }
 
-  void _onFromSelected(TranslateLanguage lang, int idx, BuildContext ctx) {
+  void _onFromSelected(lang, int idx, BuildContext ctx) {
     // int idx = fromLanguages.indexWhere((element) => element["target"] == lang);
     setState(() {
       _selectedFromLang = lang;
@@ -300,7 +310,7 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
     Navigator.pop(ctx);
   }
 
-  void _onToSelected(TranslateLanguage lang, int idx, BuildContext ctx) {
+  void _onToSelected(lang, int idx, BuildContext ctx) {
     setState(() {
       _selectedToLang = lang;
       _selectedLanguage = idx;
@@ -367,8 +377,9 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
                           ))),
                   const ListTile(title: Text("All Languages", style: TextStyle(fontSize: 20))),
                   const Divider(indent: 5),
-                  ...TranslateLanguage.values
-                      .where((element) => element.name.contains(toTextController.text))
+                  ...allLanguages
+                      .where((element) =>
+                          element["name"].startsWith(toTextController.text.toLowerCase()))
                       .toList()
                       .asMap()
                       .entries
@@ -376,7 +387,7 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
                           title: TextButton(
                               style: const ButtonStyle(alignment: Alignment.centerLeft),
                               onPressed: () => _onToSelected(title.value, title.key, ctx),
-                              child: Text(title.value.name))))
+                              child: Text(title.value["name"]))))
                       .toList()
                 ]),
               );
@@ -422,6 +433,17 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
   //       },
   //     );
 
+  Future<dynamic> fetchData(String text) async {
+    final response = await http.get(Uri.parse(
+        'https://lingva.ml/api/v1/${_selectedFromLang["code"]}/${_selectedToLang["code"]}/${text}'));
+
+    if (response.statusCode == 200 && text.isNotEmpty) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load translation');
+    }
+  }
+
   Future<void> _processImage(InputImage inputImage) async {
     if (!_canProcess) return;
     if (_isBusy) return;
@@ -434,18 +456,22 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
     if (inputImage.metadata?.size != null && inputImage.metadata?.rotation != null) {
       List<Map<String, dynamic>> lst = [];
 
-      final TranslateLanguage sourceLang = fromLanguages[_selectedLanguage]["target"];
-      final TranslateLanguage targetLang = toLanguage;
+      final sourceLang = fromLanguages[_selectedLanguage]["target"];
+      final targetLang = toLanguage;
 
       print("object: $sourceLang");
       print("oject: $targetLang");
       print("oject: ${_textRecognizer.script}");
 
-      final onDeviceTranslator =
-          OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
+      // final onDeviceTranslator =
+      //     OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
 
       for (final textBlock in recognizedText.blocks) {
-        final String text = await onDeviceTranslator.translateText(textBlock.text);
+        // final String text = await onDeviceTranslator.translateText(textBlock.text);
+        var translatedObj = await fetchData(textBlock.text);
+        final String text = translatedObj["translation"];
+        print("object: $text");
+
         lst.add({
           "boundingBox": textBlock.boundingBox,
           "cornerPoints": textBlock.cornerPoints,

@@ -1,7 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+// import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 
 import 'camera_view.dart';
 import 'gallery_view.dart';
@@ -26,8 +26,8 @@ class DetectorView extends StatefulWidget {
   }) : super(key: key);
 
   final TextRecognizer recognizer;
-  final TranslateLanguage fromLang;
-  final TranslateLanguage targetLang;
+  final Map<String, String> fromLang;
+  final Map<String, String> targetLang;
   final String title;
   final CustomPaint? customPaint;
   final String? text;

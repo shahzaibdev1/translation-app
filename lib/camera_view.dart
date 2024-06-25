@@ -1,10 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+// import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:translation_app/painters/text_detector_painter.dart';
 import 'package:translation_app/translation_details.dart';
 import "package:image/image.dart" as img;
@@ -24,8 +26,8 @@ class CameraView extends StatefulWidget {
       : super(key: key);
 
   final TextRecognizer recognizer;
-  final TranslateLanguage fromLang;
-  final TranslateLanguage targetLang;
+  final Map<String, String> fromLang;
+  final Map<String, String> targetLang;
   final CustomPaint? customPaint;
   final Function(InputImage inputImage) onImage;
   final VoidCallback? onCameraFeedReady;
@@ -161,26 +163,43 @@ class _CameraViewState extends State<CameraView> {
     }
   }
 
+  Future<dynamic> fetchData(_selectedFromLang, _selectedToLang, String text) async {
+    final response = await http.get(Uri.parse(
+        'https://lingva.ml/api/v1/${_selectedFromLang["code"]}/${_selectedToLang["code"]}/$text'));
+
+    if (response.statusCode == 200 && text.isNotEmpty) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load translation');
+    }
+  }
+
   Future<void> _processImage(InputImage inputImage, uiImage) async {
     final recognizedText = await _textRecognizer.processImage(inputImage);
     if (inputImage.metadata?.size != null && inputImage.metadata?.rotation != null) {
       List<Map<String, dynamic>> lst = [];
 
-      final TranslateLanguage sourceLang = widget.fromLang;
-      final TranslateLanguage targetLang = widget.targetLang;
+      final Map<String, String> sourceLang = widget.fromLang;
+      final Map<String, String> targetLang = widget.targetLang;
 
-      final onDeviceTranslator =
-          OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
+      // final onDeviceTranslator =
+      //     OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
 
       for (final textBlock in recognizedText.blocks) {
-        final String text = await onDeviceTranslator.translateText(textBlock.text);
-        lst.add({
-          "boundingBox": textBlock.boundingBox,
-          "cornerPoints": textBlock.cornerPoints,
-          "lines": textBlock.lines,
-          "text": text,
-          "recognizedLanguages": textBlock.recognizedLanguages
-        });
+        // final String text = await onDeviceTranslator.translateText(textBlock.text);
+
+        var translatedObj = await fetchData(sourceLang, targetLang, textBlock.text);
+        if (translatedObj && translatedObj["translation"] != null) {
+          var translatedText = translatedObj["translation"];
+
+          lst.add({
+            "boundingBox": textBlock.boundingBox,
+            "cornerPoints": textBlock.cornerPoints,
+            "lines": textBlock.lines,
+            "text": translatedText,
+            "recognizedLanguages": textBlock.recognizedLanguages
+          });
+        }
       }
 
       final painter = TextRecognizerPainter(
