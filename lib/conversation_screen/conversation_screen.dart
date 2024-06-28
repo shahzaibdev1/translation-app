@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:intl/intl.dart';
 // import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -10,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translation_app/conversation_screen/pressable_badge.dart';
+import 'package:translation_app/db/db_helper.dart';
 import 'package:translation_app/drawer/drawer.dart';
 import 'package:translation_app/providers/speech_to_text.dart';
 import 'package:translation_app/utils/utils.dart';
@@ -40,7 +42,7 @@ class _ConversationState extends State<Conversation> {
   bool isToTextEmpty = true;
 
   // final _modelManager = OnDeviceTranslatorModelManager();
-  bool isDownloading = false;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -121,7 +123,7 @@ class _ConversationState extends State<Conversation> {
     //     OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
 
     // final String translatedText = await onDeviceTranslator.translateText(text);
-    var translatedObj = await fetchData(text);
+    var translatedObj = await fetchData(text, 1);
 
     if (translatedObj["translation"] != null) {
       var translatedText = translatedObj["translation"];
@@ -140,14 +142,61 @@ class _ConversationState extends State<Conversation> {
     }
   }
 
-  Future<dynamic> fetchData(String text) async {
-    final response = await http.get(
-        Uri.parse('https://lingva.ml/api/v1/${firstMan["code"]}/${secondMan["code"]}/${text}'));
+  Future<dynamic> fetchData(String text, int? man) async {
+    String fromLang =
+        firstMan["code"] == "auto" || firstMan["code"] == null ? "en" : firstMan["code"]!;
 
-    if (response.statusCode == 200 && text.isNotEmpty) {
-      return jsonDecode(response.body);
+    if (man == 2) {
+      final response = await http
+          .get(Uri.parse('https://lingva.ml/api/v1/${secondMan["code"]}/$fromLang/$text'));
+
+      if (response.statusCode == 200 && text.isNotEmpty) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load suggestions');
+      }
+    } else if (man == 1) {
+      final response = await http.get(
+          Uri.parse('https://lingva.ml/api/v1/${firstMan["code"]}/${secondMan["code"]}/$text'));
+
+      if (response.statusCode == 200 && text.isNotEmpty) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load suggestions');
+      }
     } else {
-      throw Exception('Failed to load suggestions');
+      if (currentMan == 1) {
+        final response = await http.get(
+            Uri.parse('https://lingva.ml/api/v1/${firstMan["code"]}/${secondMan["code"]}/$text'));
+
+        if (response.statusCode == 200 && text.isNotEmpty) {
+          return jsonDecode(response.body);
+        } else {
+          throw Exception('Failed to load suggestions');
+        }
+      } else {
+        if (currentMan == 1) {
+          final response = await http.get(
+              Uri.parse('https://lingva.ml/api/v1/${firstMan["code"]}/${secondMan["code"]}/$text'));
+
+          if (response.statusCode == 200 && text.isNotEmpty) {
+            return jsonDecode(response.body);
+          } else {
+            throw Exception('Failed to load suggestions');
+          }
+        } else {
+          final response = await http
+              .get(Uri.parse('https://lingva.ml/api/v1/${secondMan["code"]}/$fromLang/$text'));
+
+          if (response.statusCode == 200 && text.isNotEmpty) {
+            return jsonDecode(response.body);
+          } else {
+            print(
+                "${response.body} ${'https://lingva.ml/api/v1/${secondMan["code"]}/$fromLang/$text'}");
+            throw Exception('Failed to load suggestions');
+          }
+        }
+      }
     }
   }
 
@@ -185,7 +234,7 @@ class _ConversationState extends State<Conversation> {
     //     OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
 
     // final String translatedText = await onDeviceTranslator.translateText(text);
-    var translatedObj = await fetchData(text);
+    var translatedObj = await fetchData(text, 2);
 
     if (translatedObj["translation"] != null) {
       var translatedText = translatedObj["translation"];
@@ -205,60 +254,107 @@ class _ConversationState extends State<Conversation> {
   }
 
   void handleChange() async {
-    String text = chatTextController.text;
-    if (text == "") return;
+    setState(() {
+      isLoading = true;
+    });
 
-    if (currentMan == 1) {
-      // final onDeviceTranslator =
-      //     OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
+    final ThemeData theme = Theme.of(context);
+    try {
+      String text = chatTextController.text;
 
-      // final String translatedText = await onDeviceTranslator.translateText(text);
-      var translatedObj = await fetchData(text);
-
-      if (translatedObj["translation"] != null) {
-        var translatedText = translatedObj["translation"];
-
-        setState(() {
-          messages.add({
-            "text": text,
-            "translatedText": translatedText,
-            "currentMan": currentMan.toString(),
-            "originLang": firstMan,
-            "targetLang": secondMan,
-          });
-        });
+      if (text == "") {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: theme.colorScheme.errorContainer,
+            content: Text('Text is empty!', style: TextStyle(color: theme.colorScheme.error)),
+            duration: const Duration(seconds: 3),
+          ),
+        );
       }
-      chatTextController.clear();
-    } else if (currentMan == 2) {
-      // final onDeviceTranslator =
-      //     OnDeviceTranslator(sourceLanguage: secondMan, targetLanguage: firstMan);
 
-      // final String translatedText = await onDeviceTranslator.translateText(text);
-      var translatedObj = await fetchData(text);
+      if (currentMan == 1) {
+        // final onDeviceTranslator =
+        //     OnDeviceTranslator(sourceLanguage: firstMan, targetLanguage: secondMan);
 
-      if (translatedObj["translation"] != null) {
-        var translatedText = translatedObj["translation"];
+        // final String translatedText = await onDeviceTranslator.translateText(text);
+        var translatedObj = await fetchData(text, 0);
 
-        setState(() {
-          messages.add({
-            "text": text,
-            "translatedText": translatedText,
-            "currentMan": currentMan.toString(),
-            "originLang": firstMan,
-            "targetLang": secondMan,
+        if (translatedObj["translation"] != null) {
+          var translatedText = translatedObj["translation"];
+
+          setState(() {
+            messages.add({
+              "text": text,
+              "translatedText": translatedText,
+              "currentMan": currentMan.toString(),
+              "originLang": firstMan,
+              "targetLang": secondMan,
+            });
           });
-        });
-
+          addToHistory(text, translatedText);
+        }
         chatTextController.clear();
-      }
-    }
+      } else if (currentMan == 2) {
+        // final onDeviceTranslator =
+        //     OnDeviceTranslator(sourceLanguage: secondMan, targetLanguage: firstMan);
 
-    return;
+        // final String translatedText = await onDeviceTranslator.translateText(text);
+        var translatedObj = await fetchData(text, 0);
+
+        if (translatedObj["translation"] != null) {
+          var translatedText = translatedObj["translation"];
+
+          setState(() {
+            messages.add({
+              "text": text,
+              "translatedText": translatedText,
+              "currentMan": currentMan.toString(),
+              "originLang": firstMan,
+              "targetLang": secondMan,
+            });
+          });
+          addToHistory(text, translatedText);
+
+          chatTextController.clear();
+        }
+      }
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: theme.colorScheme.errorContainer,
+          content: Text('Something went wrong! Please check your internet connection.',
+              style: TextStyle(color: theme.colorScheme.error)),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void addToHistory(
+    text,
+    translatedText,
+  ) async {
+    // _translatedText
+    // inputFieldController.text
+    DateTime time = DateTime.now();
+    final dbHelper = HistoryDbHelper();
+
+    dbHelper.insertData({
+      "text": text,
+      "translation": translatedText,
+      'time': DateFormat("dd MMM yyyy, hh:mm a").format(time),
+      "type": "Conversation"
+    });
   }
 
   void _start_speaking(String text, lang) {
     if (lang != null) {
-      _flutterTts.setLanguage(lang["code"]);
+      _flutterTts.setLanguage(lang["code"] == "auto" ? "en" : lang["code"]);
     }
     _flutterTts.speak(text);
   }
@@ -468,215 +564,231 @@ class _ConversationState extends State<Conversation> {
     final ThemeData theme = Theme.of(context);
 
     return Scaffold(
-      drawer: const DrawerWidget(),
-      appBar: AppBar(
-        title: const Text("Translator"),
-        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.star_rounded), iconSize: 30)],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: messages.isEmpty
-                  ? MediaQuery.of(context).viewInsets.bottom == 0
-                      ? Center(
-                          child: SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.4,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: Column(children: [
-                                Center(
-                                    child: Image.asset("assets/images/empty_conversation.png",
-                                        height: MediaQuery.of(context).size.height * 0.2,
-                                        fit: BoxFit.contain)),
-                                const SizedBox(height: 20),
-                                const Text("Conversation Translator",
-                                    style: TextStyle(fontSize: 20, fontFamily: "Gordita Bold")),
-                                const Text("Tap the mic and speak or write in the text field")
-                              ])))
-                      : const SizedBox.shrink()
-                  : ListView.builder(
-                      itemCount: messages.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return Column(children: [
-                          Align(
-                              alignment: messages[index]["currentMan"] == '1'
-                                  ? Alignment.centerLeft
-                                  : Alignment.centerRight,
-                              child: Row(
-                                  mainAxisAlignment: messages[index]["currentMan"] == '1'
-                                      ? MainAxisAlignment.start
-                                      : MainAxisAlignment.end,
-                                  children: [
-                                    messages[index]["currentMan"] == '1'
-                                        ? IconButton.filled(
-                                            onPressed: () => _start_speaking(
-                                                messages[index]["translatedText"],
-                                                messages[index]["targetLang"]),
-                                            icon: SvgPicture.asset(
-                                              "assets/images/speak.svg",
-                                              colorFilter: ColorFilter.mode(
-                                                theme.colorScheme.onPrimary,
-                                                BlendMode.srcIn,
-                                              ),
-                                            ),
-                                          )
-                                        : const SizedBox.shrink(),
-                                    Container(
-                                        margin: const EdgeInsets.only(
-                                            left: 8.0, right: 8, bottom: 12, top: 4),
-                                        padding: const EdgeInsets.all(8.0),
-                                        decoration: BoxDecoration(
-                                          color: theme.colorScheme.primary,
-                                          borderRadius: BorderRadius.circular(8.0),
-                                        ),
-                                        child: Column(children: [
-                                          Text(
-                                              messages[index]["translatedText"] != null
-                                                  ? messages[index]["text"]!
-                                                  : "",
-                                              style: theme.textTheme.bodyLarge!.copyWith(
-                                                  color: theme.colorScheme.onPrimary
-                                                      .withOpacity(0.3))),
-                                          // Divider(),
-                                          // Spacer(),
-                                          const SizedBox(height: 5),
-                                          Text(
-                                            messages[index]["translatedText"] != null
-                                                ? messages[index]["translatedText"]!
-                                                : "",
-                                            style: theme.textTheme.bodyLarge!
-                                                .copyWith(color: theme.colorScheme.onPrimary),
-                                          ),
-                                        ])),
-                                    messages[index]["currentMan"] == '2'
-                                        ? IconButton.filled(
-                                            onPressed: () => _start_speaking(
-                                                messages[index]["translatedText"],
-                                                messages[index]["originLang"]),
-                                            icon: SvgPicture.asset(
-                                              "assets/images/speak.svg",
-                                              colorFilter: ColorFilter.mode(
-                                                theme.colorScheme.onPrimary,
-                                                BlendMode.srcIn,
-                                              ),
-                                            ),
-                                          )
-                                        : const SizedBox.shrink(),
-                                  ])),
-                        ]);
-                      },
-                    ),
-            ),
-            Container(
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Column(
-                      children: [
-                        IconButton.filled(
-                            style: ButtonStyle(
-                                backgroundColor: MaterialStatePropertyAll(
-                                    theme.colorScheme.primary.withAlpha(150))),
-                            onPressed:
-                                Provider.of<SpeachToTextProvider>(context).status == "listening" &&
-                                        Provider.of<SpeachToTextProvider>(context).idx == 2
-                                    ? _stopListening
-                                    : _startListening,
-                            icon:
-                                Provider.of<SpeachToTextProvider>(context).status == "listening" &&
-                                        Provider.of<SpeachToTextProvider>(context).idx == 2
-                                    ? const SizedBox(
-                                        width: 25, height: 25, child: CircularProgressIndicator())
-                                    : Icon(Icons.mic, color: theme.colorScheme.onBackground),
-                            padding: const EdgeInsets.all(20)),
-                        const Divider(),
-                        SizedBox(
-                          // width: MediaQuery.of(context).size.width * 0.33,
-                          child: FilledButton.icon(
-                              style: ButtonStyle(
-                                  shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
-                                      RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10))),
-                                  foregroundColor: const MaterialStatePropertyAll(Colors.black),
-                                  backgroundColor: MaterialStatePropertyAll(Colors.blue.shade200)),
-                              onPressed: () => _showFrom(context),
-                              label: Text(firstMan["name"]!),
-                              icon: const Icon(Icons.arrow_drop_down)),
-                        ),
-                      ],
-                    ),
-                    // IconButton(onPressed: onPressed, icon: Icon(Icons)),
-                    Column(
-                      children: [
-                        IconButton.filled(
-                            style: ButtonStyle(
-                                backgroundColor: MaterialStatePropertyAll(
-                                    theme.colorScheme.primary.withAlpha(150))),
-                            onPressed:
-                                Provider.of<SpeachToTextProvider>(context).status == "listening" &&
-                                        Provider.of<SpeachToTextProvider>(context).idx == 3
-                                    ? _stopListening1
-                                    : _startListening1,
-                            icon:
-                                Provider.of<SpeachToTextProvider>(context).status == "listening" &&
-                                        Provider.of<SpeachToTextProvider>(context).idx == 3
-                                    ? const SizedBox(
-                                        width: 25, height: 25, child: CircularProgressIndicator())
-                                    : Icon(Icons.mic, color: theme.colorScheme.onBackground),
-                            padding: const EdgeInsets.all(20)),
-                        const Divider(),
-                        SizedBox(
-                          // width: MediaQuery.of(context).size.width * 0.33,
-                          child: FilledButton.icon(
-                              style: ButtonStyle(
-                                  shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
-                                      RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10))),
-                                  foregroundColor: const MaterialStatePropertyAll(Colors.black),
-                                  backgroundColor: MaterialStatePropertyAll(Colors.blue.shade200)),
-                              onPressed: () => _showTo(context),
-                              label: Text(secondMan["name"]!),
-                              icon: const Icon(Icons.arrow_drop_down)),
-                        ),
-                      ],
-                    ),
-                  ],
-                )),
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                children: [
-                  Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                          border: Border.all(width: 1, color: Colors.black.withAlpha(100)),
-                          borderRadius: BorderRadius.circular(6)),
-                      child: Row(children: [
-                        SizedBox(
-                            width: MediaQuery.of(context).size.width - 105,
-                            child: TextField(
-                              controller: chatTextController,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                labelText: "Enter your message",
-                              ),
-                            )),
-                        PressableBadge(
-                            text: currentMan.toString(),
-                            onPressed: () => currentMan == 1
-                                ? setState(() => currentMan = 2)
-                                : setState(() => currentMan = 1))
-                      ])),
-                  IconButton(onPressed: handleChange, icon: const Icon(Icons.send))
-                ],
-              ),
-            ),
-          ],
+        drawer: const DrawerWidget(),
+        appBar: AppBar(
+          title: const Text("Translator"),
+          // actions: [
+          //   IconButton(onPressed: () {}, icon: const Icon(Icons.star_rounded), iconSize: 30)
+          // ],
         ),
-      ),
-    );
+        body: SafeArea(
+            child: Theme(
+          data: theme.copyWith(
+              textSelectionTheme: TextSelectionThemeData(
+                  selectionColor: Colors.cyan[800], selectionHandleColor: Colors.cyan[800])),
+          child: Column(
+            children: [
+              Expanded(
+                child: messages.isEmpty
+                    ? MediaQuery.of(context).viewInsets.bottom == 0
+                        ? Center(
+                            child: SizedBox(
+                                height: MediaQuery.of(context).size.height * 0.4,
+                                width: MediaQuery.of(context).size.width * 0.9,
+                                child: Column(children: [
+                                  Center(
+                                      child: Image.asset("assets/images/empty_conversation.png",
+                                          height: MediaQuery.of(context).size.height * 0.2,
+                                          fit: BoxFit.contain)),
+                                  const SizedBox(height: 20),
+                                  const Text("Conversation Translator",
+                                      style: TextStyle(fontSize: 20, fontFamily: "Gordita Bold")),
+                                  const Text("Tap the mic and speak or write in the text field")
+                                ])))
+                        : const SizedBox.shrink()
+                    : ListView.builder(
+                        itemCount: messages.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return Column(children: [
+                            Align(
+                                alignment: messages[index]["currentMan"] == '1'
+                                    ? Alignment.centerLeft
+                                    : Alignment.centerRight,
+                                child: Row(
+                                    mainAxisAlignment: messages[index]["currentMan"] == '1'
+                                        ? MainAxisAlignment.start
+                                        : MainAxisAlignment.end,
+                                    children: [
+                                      messages[index]["currentMan"] == '1'
+                                          ? IconButton.filled(
+                                              onPressed: () => _start_speaking(
+                                                  messages[index]["translatedText"],
+                                                  messages[index]["targetLang"]),
+                                              icon: SvgPicture.asset(
+                                                "assets/images/speak.svg",
+                                                colorFilter: ColorFilter.mode(
+                                                  theme.colorScheme.onPrimary,
+                                                  BlendMode.srcIn,
+                                                ),
+                                              ),
+                                            )
+                                          : const SizedBox.shrink(),
+                                      Container(
+                                          margin: const EdgeInsets.only(
+                                              left: 8.0, right: 8, bottom: 12, top: 4),
+                                          constraints: BoxConstraints(
+                                              maxWidth: MediaQuery.of(context).size.width * 0.8),
+                                          padding: const EdgeInsets.all(8.0),
+                                          decoration: BoxDecoration(
+                                            color: theme.colorScheme.primary,
+                                            borderRadius: BorderRadius.circular(8.0),
+                                          ),
+                                          child: Column(children: [
+                                            SelectableText(
+                                                messages[index]["translatedText"] != null
+                                                    ? messages[index]["text"]!
+                                                    : "",
+                                                style: theme.textTheme.bodyLarge!.copyWith(
+                                                    color: theme.colorScheme.onPrimary
+                                                        .withOpacity(0.3))),
+                                            // Divider(),
+                                            // Spacer(),
+                                            const SizedBox(height: 5),
+                                            SelectableText(
+                                              messages[index]["translatedText"] != null
+                                                  ? messages[index]["translatedText"]!
+                                                  : "",
+                                              style: theme.textTheme.bodyLarge!
+                                                  .copyWith(color: theme.colorScheme.onPrimary),
+                                            ),
+                                          ])),
+                                      messages[index]["currentMan"] == '2'
+                                          ? IconButton.filled(
+                                              onPressed: () => _start_speaking(
+                                                  messages[index]["translatedText"],
+                                                  messages[index]["originLang"]),
+                                              icon: SvgPicture.asset(
+                                                "assets/images/speak.svg",
+                                                colorFilter: ColorFilter.mode(
+                                                  theme.colorScheme.onPrimary,
+                                                  BlendMode.srcIn,
+                                                ),
+                                              ),
+                                            )
+                                          : const SizedBox.shrink(),
+                                    ])),
+                          ]);
+                        },
+                      ),
+              ),
+              Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Column(
+                        children: [
+                          IconButton.filled(
+                              style: ButtonStyle(
+                                  backgroundColor: MaterialStatePropertyAll(
+                                      theme.colorScheme.primary.withAlpha(150))),
+                              onPressed: Provider.of<SpeachToTextProvider>(context).status ==
+                                          "listening" &&
+                                      Provider.of<SpeachToTextProvider>(context).idx == 2
+                                  ? _stopListening
+                                  : _startListening,
+                              icon: Provider.of<SpeachToTextProvider>(context).status ==
+                                          "listening" &&
+                                      Provider.of<SpeachToTextProvider>(context).idx == 2
+                                  ? const SizedBox(
+                                      width: 25, height: 25, child: CircularProgressIndicator())
+                                  : Icon(Icons.mic, color: theme.colorScheme.onBackground),
+                              padding: const EdgeInsets.all(20)),
+                          const Divider(),
+                          SizedBox(
+                            // width: MediaQuery.of(context).size.width * 0.33,
+                            child: FilledButton.icon(
+                                style: ButtonStyle(
+                                    shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10))),
+                                    foregroundColor: const MaterialStatePropertyAll(Colors.black),
+                                    backgroundColor:
+                                        MaterialStatePropertyAll(Colors.blue.shade200)),
+                                onPressed: () => _showFrom(context),
+                                label: Text(firstMan["name"]!),
+                                icon: const Icon(Icons.arrow_drop_down)),
+                          ),
+                        ],
+                      ),
+                      // IconButton(onPressed: onPressed, icon: Icon(Icons)),
+                      Column(
+                        children: [
+                          IconButton.filled(
+                              style: ButtonStyle(
+                                  backgroundColor: MaterialStatePropertyAll(
+                                      theme.colorScheme.primary.withAlpha(150))),
+                              onPressed: Provider.of<SpeachToTextProvider>(context).status ==
+                                          "listening" &&
+                                      Provider.of<SpeachToTextProvider>(context).idx == 3
+                                  ? _stopListening1
+                                  : _startListening1,
+                              icon: Provider.of<SpeachToTextProvider>(context).status ==
+                                          "listening" &&
+                                      Provider.of<SpeachToTextProvider>(context).idx == 3
+                                  ? const SizedBox(
+                                      width: 25, height: 25, child: CircularProgressIndicator())
+                                  : Icon(Icons.mic, color: theme.colorScheme.onBackground),
+                              padding: const EdgeInsets.all(20)),
+                          const Divider(),
+                          SizedBox(
+                            // width: MediaQuery.of(context).size.width * 0.33,
+                            child: FilledButton.icon(
+                                style: ButtonStyle(
+                                    shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10))),
+                                    foregroundColor: const MaterialStatePropertyAll(Colors.black),
+                                    backgroundColor:
+                                        MaterialStatePropertyAll(Colors.blue.shade200)),
+                                onPressed: () => _showTo(context),
+                                label: Text(secondMan["name"]!),
+                                icon: const Icon(Icons.arrow_drop_down)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )),
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  children: [
+                    Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                            border: Border.all(width: 1, color: Colors.black.withAlpha(100)),
+                            borderRadius: BorderRadius.circular(6)),
+                        child: Row(children: [
+                          SizedBox(
+                              width: MediaQuery.of(context).size.width - 105,
+                              child: TextField(
+                                controller: chatTextController,
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  labelText: "Enter your message",
+                                ),
+                              )),
+                          PressableBadge(
+                              text: currentMan.toString(),
+                              onPressed: () => currentMan == 1
+                                  ? setState(() => currentMan = 2)
+                                  : setState(() => currentMan = 1))
+                        ])),
+                    IconButton(
+                        onPressed: isLoading ? null : handleChange,
+                        icon: isLoading
+                            ? const SizedBox(
+                                width: 25,
+                                height: 25,
+                                child: CircularProgressIndicator(strokeWidth: 3))
+                            : const Icon(Icons.send))
+                  ],
+                ),
+              ),
+            ],
+          ),
+        )));
   }
 
   Widget _buildDropdown() => DropdownButton(

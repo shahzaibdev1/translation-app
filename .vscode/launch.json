@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "qr_code_scanner",
+      "name": "Translation app",
       "request": "launch",
       "program": "lib/main.dart",
       // "args": ["--release"],

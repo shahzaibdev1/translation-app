@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:translation_app/history/history.dart';
 import 'package:translation_app/providers/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -101,11 +102,21 @@ class _DrawerWidgetState extends State<DrawerWidget> {
             onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
           ),
           ListTile(
-            leading: Image.asset("assets/images/history.png", width: 22, height: 22),
-            title:
-                const Text("History", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-            // onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
-          ),
+              leading: Image.asset("assets/images/history.png", width: 22, height: 22),
+              title: const Text("History",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return Builder(
+                          builder: (context) {
+                            return const History();
+                          },
+                        );
+                      },
+                    ),
+                  )),
           ListTile(
             leading: Image.asset("assets/images/language.png", width: 22, height: 22),
             title:

@@ -440,6 +440,7 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
     if (response.statusCode == 200 && text.isNotEmpty) {
       return jsonDecode(response.body);
     } else {
+      print('Failed to load translation, ${response.reasonPhrase}');
       throw Exception('Failed to load translation');
     }
   }
@@ -458,10 +459,6 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
 
       final sourceLang = fromLanguages[_selectedLanguage]["target"];
       final targetLang = toLanguage;
-
-      print("object: $sourceLang");
-      print("oject: $targetLang");
-      print("oject: ${_textRecognizer.script}");
 
       // final onDeviceTranslator =
       //     OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);

@@ -19,17 +19,39 @@ class DictionaryAutocompleteState extends State<DictionaryAutocomplete> {
   final TextEditingController _controller = TextEditingController();
   final Debouncer _debouncer = Debouncer(milliseconds: 500); // Adjust debounce time here
   List<String> _suggestions = [];
+  bool isLoading = false;
 
   void _getSuggestions(String input) async {
-    final response = await http.get(Uri.parse('https://api.datamuse.com/sug?s=$input&max=4'));
-
-    if (response.statusCode == 200 && _controller.text.isNotEmpty) {
-      List<dynamic> data = jsonDecode(response.body);
+    final ThemeData theme = Theme.of(context);
+    try {
       setState(() {
-        _suggestions = data.map((e) => e['word'] as String).toList();
+        isLoading = true;
       });
-    } else {
-      throw Exception('Failed to load suggestions');
+
+      final response = await http.get(Uri.parse('https://api.datamuse.com/sug?s=$input&max=4'));
+
+      if (response.statusCode == 200 && _controller.text.isNotEmpty) {
+        List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _suggestions = data.map((e) => e['word'] as String).toList();
+        });
+      } else {
+        throw Exception('Failed to load suggestions');
+      }
+    } catch (e) {
+      print(e);
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     backgroundColor: theme.colorScheme.errorContainer,
+      //     content: Text('Something went wrong! Please check your internet connection.',
+      //         style: TextStyle(color: theme.colorScheme.error)),
+      //     duration: const Duration(seconds: 5),
+      //   ),
+      // );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -78,21 +100,27 @@ class DictionaryAutocompleteState extends State<DictionaryAutocomplete> {
     return Stack(clipBehavior: Clip.none, children: [
       TextField(
         controller: _controller,
+
         decoration: InputDecoration(
           border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
           hintText: 'Search...',
           // labelText: 'Autocomplete',
           suffixIcon: _controller.text.isEmpty
               ? null
-              : IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    setState(() {
-                      _controller.clear();
-                      _suggestions.clear();
-                    });
-                  },
-                ),
+              : isLoading
+                  ? const SizedBox(
+                      width: 10,
+                      height: 10,
+                      child: Center(child: CircularProgressIndicator(strokeWidth: 3)))
+                  : IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        setState(() {
+                          _controller.clear();
+                          _suggestions.clear();
+                        });
+                      },
+                    ),
         ),
         onChanged: (value) {
           if (value.isEmpty) {

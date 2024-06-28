@@ -19,6 +19,30 @@ class TranslationDetails extends StatefulWidget {
 }
 
 class _TranslationDetailsState extends State<TranslationDetails> {
+  void _showOptions(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    showModalBottomSheet(
+        elevation: 10,
+        // backgroundColor: Colors.amber,
+        enableDrag: true,
+        showDragHandle: true,
+        context: context,
+        builder: (ctx) => StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+              return Container(
+                  // width: 300,
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  // color: Colors.white54,
+                  alignment: Alignment.center,
+                  child: Row(children: [IconButton(onPressed: () {}, icon: Icon(Icons.copy))]));
+            }));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _showOptions(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -14,11 +14,12 @@ class SpeachToTextProvider extends ChangeNotifier {
     await _speechToText.initialize(
         onStatus: (status) {
           this.status = status;
-          print("$status, status");
+          print("Status: $status");
+
           notifyListeners();
         },
         onError: (errorNotification) {
-          print(errorNotification.errorMsg);
+          print("Error: ${errorNotification.errorMsg}");
           idx = 0;
         },
         debugLogging: true);
@@ -28,13 +29,13 @@ class SpeachToTextProvider extends ChangeNotifier {
     this.idx = idx;
     await _speechToText.listen(
         onResult: (result) {
-          onResult(result.recognizedWords);
           print(result.recognizedWords);
-          // this.status = "listening";
+          onResult(result);
           notifyListeners();
         },
+        pauseFor: const Duration(seconds: 10),
         listenOptions: SpeechListenOptions(
-            cancelOnError: true, partialResults: false, listenMode: ListenMode.confirmation));
+            cancelOnError: true, partialResults: false, listenMode: ListenMode.dictation));
   }
 
   void stopListening() async {

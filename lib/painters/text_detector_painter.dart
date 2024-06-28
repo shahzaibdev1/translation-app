@@ -5,7 +5,7 @@ import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+// import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 
 import 'coordinates_translator.dart';
 

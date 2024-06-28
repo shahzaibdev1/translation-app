@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 // import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:provider/provider.dart';
 import 'package:translation_app/TextRecognizer.dart';
@@ -92,7 +93,9 @@ class _TextScreenState extends State<TextScreen> {
   }
 
   /// Each time to start a speech recognition session
-  void _startListening() {
+  void _startListening() async {
+    var status = await Permission.microphone.status;
+
     Provider.of<SpeachToTextProvider>(context, listen: false)
         .startListening(onResult: _onSpeechResult, idx: 1);
     setState(() {});
@@ -110,6 +113,7 @@ class _TextScreenState extends State<TextScreen> {
   /// This is the callback that the SpeechToText plugin calls when
   /// the platform returns recognized words.
   void _onSpeechResult(SpeechRecognitionResult result) {
+    print("object: $result");
     setState(() {
       inputFieldController.text = result.recognizedWords;
       _lastWords = result.recognizedWords;
@@ -128,11 +132,10 @@ class _TextScreenState extends State<TextScreen> {
   }
 
   void translateText() async {
-    final ThemeData theme = Theme.of(context);
-
     setState(() {
       isLoading = true;
     });
+    final ThemeData theme = Theme.of(context);
 
     try {
       String text = inputFieldController.text;
@@ -145,7 +148,7 @@ class _TextScreenState extends State<TextScreen> {
           SnackBar(
             backgroundColor: theme.colorScheme.errorContainer,
             content: Text('Text is empty!', style: TextStyle(color: theme.colorScheme.error)),
-            duration: const Duration(seconds: 5),
+            duration: const Duration(seconds: 3),
           ),
         );
         return;
@@ -168,7 +171,34 @@ class _TextScreenState extends State<TextScreen> {
       }
     } catch (e) {
       print("Something went wrong while translating text: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: theme.colorScheme.errorContainer,
+          content: Text('Something went wrong! Please check your internet connection.',
+              style: TextStyle(color: theme.colorScheme.error)),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+      addToHistory();
     }
+  }
+
+  void addToHistory() async {
+    // _translatedText
+    // inputFieldController.text
+    DateTime time = DateTime.now();
+    final dbHelper = HistoryDbHelper();
+
+    dbHelper.insertData({
+      "text": inputFieldController.text,
+      "translation": _translatedText,
+      'time': DateFormat("dd MMM yyyy, hh:mm a").format(time),
+      "type": "Translate"
+    });
   }
 
   void _startSpeaking(text, String target) async {
@@ -177,7 +207,8 @@ class _TextScreenState extends State<TextScreen> {
       _flutterTts.setLanguage(_selectedToLang["code"]!);
       _flutterTts.speak(text);
     } else if (target == "from") {
-      _flutterTts.setLanguage(_selectedFromLang["code"]!);
+      _flutterTts
+          .setLanguage(_selectedFromLang["code"] == "auto" ? "en" : _selectedFromLang["code"]!);
       _flutterTts.speak(text);
     }
   }
@@ -564,15 +595,32 @@ class _TextScreenState extends State<TextScreen> {
                                             color: theme.colorScheme.onPrimary,
                                           ))
                                       : const Icon(Icons.mic)),
-                              ElevatedButton(
-                                onPressed: () => translateText(),
-                                style: ButtonStyle(
-                                    backgroundColor:
-                                        MaterialStateProperty.all<Color>(theme.colorScheme.primary),
-                                    foregroundColor: MaterialStateProperty.all<Color>(
-                                        theme.colorScheme.onPrimary)),
-                                child: const Text("Translate"),
-                              )
+                              SizedBox(
+                                  width: 130,
+                                  // height: 20,
+                                  child: ElevatedButton(
+                                    onPressed: isLoading ? null : translateText,
+                                    style: ButtonStyle(
+                                        backgroundColor: isLoading
+                                            ? MaterialStateProperty.all<Color>(
+                                                theme.colorScheme.primary.withOpacity(0.5))
+                                            : MaterialStateProperty.all<Color>(
+                                                theme.colorScheme.primary),
+                                        foregroundColor: MaterialStateProperty.all<Color>(
+                                            theme.colorScheme.onPrimary)),
+                                    child: isLoading
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: 2, vertical: 2),
+                                                child: CircularProgressIndicator(
+                                                  color: Colors.white,
+                                                  strokeWidth: 2,
+                                                )))
+                                        : const Text("Translate"),
+                                  ))
                             ])
                           ],
                         ))

@@ -189,7 +189,7 @@ class _CameraViewState extends State<CameraView> {
         // final String text = await onDeviceTranslator.translateText(textBlock.text);
 
         var translatedObj = await fetchData(sourceLang, targetLang, textBlock.text);
-        if (translatedObj && translatedObj["translation"] != null) {
+        if (translatedObj != null && translatedObj["translation"] != null) {
           var translatedText = translatedObj["translation"];
 
           lst.add({
