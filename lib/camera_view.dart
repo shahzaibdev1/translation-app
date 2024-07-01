@@ -388,7 +388,7 @@ class _CameraViewState extends State<CameraView> {
       );
 
   Widget _exposureControl() => Positioned(
-        top: 40,
+        top: 80,
         right: 8,
         child: ConstrainedBox(
           constraints: const BoxConstraints(

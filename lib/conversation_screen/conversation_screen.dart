@@ -695,8 +695,10 @@ class _ConversationState extends State<Conversation> {
                                   : Icon(Icons.mic, color: theme.colorScheme.onBackground),
                               padding: const EdgeInsets.all(20)),
                           const Divider(),
-                          SizedBox(
-                            // width: MediaQuery.of(context).size.width * 0.33,
+                          ConstrainedBox(
+                            constraints:
+                                BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.4),
+                            // width: MediaQuery.of(context).size.width * 0.35,
                             child: FilledButton.icon(
                                 style: ButtonStyle(
                                     shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
@@ -706,7 +708,7 @@ class _ConversationState extends State<Conversation> {
                                     backgroundColor:
                                         MaterialStatePropertyAll(Colors.blue.shade200)),
                                 onPressed: () => _showFrom(context),
-                                label: Text(firstMan["name"]!),
+                                label: Text(firstMan["name"]!, overflow: TextOverflow.ellipsis),
                                 icon: const Icon(Icons.arrow_drop_down)),
                           ),
                         ],
@@ -731,8 +733,10 @@ class _ConversationState extends State<Conversation> {
                                   : Icon(Icons.mic, color: theme.colorScheme.onBackground),
                               padding: const EdgeInsets.all(20)),
                           const Divider(),
-                          SizedBox(
-                            // width: MediaQuery.of(context).size.width * 0.33,
+                          ConstrainedBox(
+                            constraints:
+                                BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.4),
+                            // width: MediaQuery.of(context).size.width * 0.35,
                             child: FilledButton.icon(
                                 style: ButtonStyle(
                                     shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
@@ -742,7 +746,7 @@ class _ConversationState extends State<Conversation> {
                                     backgroundColor:
                                         MaterialStatePropertyAll(Colors.blue.shade200)),
                                 onPressed: () => _showTo(context),
-                                label: Text(secondMan["name"]!),
+                                label: Text(secondMan["name"]!, overflow: TextOverflow.ellipsis),
                                 icon: const Icon(Icons.arrow_drop_down)),
                           ),
                         ],

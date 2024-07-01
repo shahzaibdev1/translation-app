@@ -181,58 +181,72 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
           onCameraLensDirectionChanged: (value) => _cameraLensDirection = value,
         ),
         Positioned(
-            top: 110,
-            left: 40,
-            child: Row(
-              children: [
-                Row(children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      // color: Colors.black54,
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    child:
-                        // Padding(padding: const EdgeInsets.all(4.0), child: _buildDropdown()
-                        FilledButton.icon(
-                            style: ButtonStyle(
-                                shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
-                                    RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10))),
-                                foregroundColor: const MaterialStatePropertyAll(Colors.black),
-                                backgroundColor: MaterialStatePropertyAll(Colors.blue.shade200)),
-                            onPressed: () => _showFromBottom(context),
-                            label: Text(_selectedFromLang["name"]!),
-                            icon: const Icon(Icons.arrow_drop_down)),
-                  ),
+            top: 120,
+            left: 0,
+            right: 0,
+            child: Center(
+                child: Container(
+                    width: MediaQuery.of(context).size.width * 0.87,
+                    child: Row(
+                      children: [
+                        Row(children: [
+                          Container(
+                              decoration: BoxDecoration(
+                                // color: Colors.black54,
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              child:
+                                  // Padding(padding: const EdgeInsets.all(4.0), child: _buildDropdown()
+                                  SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.4,
+                                // width: MediaQuery.of(context).size.width * 0.35,
+                                child: FilledButton.icon(
+                                    style: ButtonStyle(
+                                        shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(10))),
+                                        foregroundColor:
+                                            const MaterialStatePropertyAll(Colors.black),
+                                        backgroundColor:
+                                            MaterialStatePropertyAll(Colors.blue.shade200)),
+                                    onPressed: () => _showFromBottom(context),
+                                    label: Text(_selectedFromLang["name"]!,
+                                        overflow: TextOverflow.ellipsis),
+                                    icon: const Icon(Icons.arrow_drop_down)),
+                              )),
 
-                  // )
+                          // )
 
-                  const Icon(Icons.chevron_right),
-                  Container(
-                      // margin: const EdgeInsets.only(left: 8),
-                      decoration: BoxDecoration(
-                        // color: Colors.black54,
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      child: Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.33,
-                            child: FilledButton.icon(
-                                style: ButtonStyle(
-                                    shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
-                                        RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(10))),
-                                    foregroundColor: const MaterialStatePropertyAll(Colors.black),
-                                    backgroundColor:
-                                        MaterialStatePropertyAll(Colors.blue.shade200)),
-                                onPressed: () => _showTo(context),
-                                label: Text(_selectedToLang["name"]!),
-                                icon: const Icon(Icons.arrow_drop_down)),
-                          ))),
-                ]),
-              ],
-            )),
+                          SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.05,
+                              child: const Icon(Icons.chevron_right)),
+                          Container(
+                              // margin: const EdgeInsets.only(left: 8),
+                              decoration: BoxDecoration(
+                                // color: Colors.black54,
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              child: Padding(
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: SizedBox(
+                                    width: MediaQuery.of(context).size.width * 0.4,
+                                    child: FilledButton.icon(
+                                        style: ButtonStyle(
+                                            shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
+                                                RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(10))),
+                                            foregroundColor:
+                                                const MaterialStatePropertyAll(Colors.black),
+                                            backgroundColor:
+                                                MaterialStatePropertyAll(Colors.blue.shade200)),
+                                        onPressed: () => _showTo(context),
+                                        label: Text(_selectedToLang["name"]!,
+                                            overflow: TextOverflow.ellipsis),
+                                        icon: const Icon(Icons.arrow_drop_down)),
+                                  ))),
+                        ]),
+                      ],
+                    )))),
       ]),
     );
   }

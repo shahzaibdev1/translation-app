@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:intl/intl.dart';
@@ -486,9 +487,12 @@ class _TextScreenState extends State<TextScreen> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              SizedBox(
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                    maxWidth: MediaQuery.of(context).size.width * 0.4),
                                 // width: MediaQuery.of(context).size.width * 0.35,
                                 child: FilledButton.icon(
+                                    clipBehavior: Clip.hardEdge,
                                     style: ButtonStyle(
                                         shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
                                             RoundedRectangleBorder(
@@ -498,14 +502,18 @@ class _TextScreenState extends State<TextScreen> {
                                         backgroundColor:
                                             MaterialStatePropertyAll(Colors.blue.shade200)),
                                     onPressed: () => _showFrom(context),
-                                    label: Text(_selectedFromLang["name"]!),
+                                    label: Text(_selectedFromLang["name"]!,
+                                        overflow: TextOverflow.ellipsis),
                                     icon: const Icon(Icons.arrow_drop_down)),
                               ),
                               SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.05,
                                 child: const Icon(Icons.chevron_right),
                               ),
-                              SizedBox(
+
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                    maxWidth: MediaQuery.of(context).size.width * 0.4),
                                 // width: MediaQuery.of(context).size.width * 0.35,
                                 child: FilledButton.icon(
                                     style: ButtonStyle(
@@ -518,7 +526,8 @@ class _TextScreenState extends State<TextScreen> {
                                         backgroundColor:
                                             MaterialStatePropertyAll(Colors.blue.shade200)),
                                     onPressed: () => _showTo(context),
-                                    label: Text(_selectedToLang["name"]!),
+                                    label: Text(_selectedToLang["name"]!,
+                                        overflow: TextOverflow.ellipsis),
                                     icon: const Icon(Icons.arrow_drop_down)),
                               ),
                               // _buildToDropdown(),

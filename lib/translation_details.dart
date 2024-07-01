@@ -33,7 +33,8 @@ class _TranslationDetailsState extends State<TranslationDetails> {
                   height: MediaQuery.of(context).size.height * 0.6,
                   // color: Colors.white54,
                   alignment: Alignment.center,
-                  child: Row(children: [IconButton(onPressed: () {}, icon: Icon(Icons.copy))]));
+                  child:
+                      Row(children: [IconButton(onPressed: () {}, icon: const Icon(Icons.copy))]));
             }));
   }
 
