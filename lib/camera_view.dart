@@ -163,14 +163,41 @@ class _CameraViewState extends State<CameraView> {
     }
   }
 
-  Future<dynamic> fetchData(_selectedFromLang, _selectedToLang, String text) async {
+  Future<dynamic> fetchData(selectedFromLang, selectedToLang, String text, String? origin) async {
+    origin ??= "translate.plausibility.cloud";
+
     final response = await http.get(Uri.parse(
-        'https://lingva.ml/api/v1/${_selectedFromLang["code"]}/${_selectedToLang["code"]}/$text'));
+        'https://$origin/api/v1/${selectedFromLang["code"]}/${selectedToLang["code"]}/$text'));
 
     if (response.statusCode == 200 && text.isNotEmpty) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to load translation');
+      switch (origin) {
+        case "translate.plausibility.cloud":
+          print("translate.plausibility.cloud not working, trying lingva.ml");
+
+          origin = "lingva.ml";
+          break;
+        case "translate.plausibility.cloud":
+          print("translate.plausibility.cloud not working, trying lingva.lunar.icu");
+
+          origin = "lingva.lunar.icu";
+          break;
+        case "lingva.lunar.icu":
+          print("lingva.lunar.icu not working, trying translate.dr460nf1r3.org");
+
+          origin = "translate.dr460nf1r3.org";
+          break;
+        case "translate.dr460nf1r3.org":
+          print("translate.dr460nf1r3.org not working, trying lingva.garudalinux.org");
+
+          origin = "lingva.garudalinux.org";
+          break;
+        default:
+          throw Exception('Failed to load translation');
+      }
+
+      return await fetchData(selectedFromLang, selectedToLang, text, origin);
     }
   }
 
@@ -188,7 +215,7 @@ class _CameraViewState extends State<CameraView> {
       for (final textBlock in recognizedText.blocks) {
         // final String text = await onDeviceTranslator.translateText(textBlock.text);
 
-        var translatedObj = await fetchData(sourceLang, targetLang, textBlock.text);
+        var translatedObj = await fetchData(sourceLang, targetLang, textBlock.text, null);
         if (translatedObj != null && translatedObj["translation"] != null) {
           var translatedText = translatedObj["translation"];
 

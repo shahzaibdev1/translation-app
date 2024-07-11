@@ -447,15 +447,41 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
   //       },
   //     );
 
-  Future<dynamic> fetchData(String text) async {
+  Future<dynamic> fetchData(String text, String? origin) async {
+    origin ??= "translate.plausibility.cloud";
+
     final response = await http.get(Uri.parse(
-        'https://lingva.ml/api/v1/${_selectedFromLang["code"]}/${_selectedToLang["code"]}/${text}'));
+        'https://$origin/api/v1/${_selectedFromLang["code"]}/${_selectedToLang["code"]}/${text}'));
 
     if (response.statusCode == 200 && text.isNotEmpty) {
       return jsonDecode(response.body);
     } else {
-      print('Failed to load translation, ${response.reasonPhrase}');
-      throw Exception('Failed to load translation');
+      switch (origin) {
+        case "translate.plausibility.cloud":
+          print("translate.plausibility.cloud not working, trying lingva.ml");
+
+          origin = "lingva.ml";
+          break;
+        case "translate.plausibility.cloud":
+          print("translate.plausibility.cloud not working, trying lingva.lunar.icu");
+
+          origin = "lingva.lunar.icu";
+          break;
+        case "lingva.lunar.icu":
+          print("lingva.lunar.icu not working, trying translate.dr460nf1r3.org");
+
+          origin = "translate.dr460nf1r3.org";
+          break;
+        case "translate.dr460nf1r3.org":
+          print("translate.dr460nf1r3.org not working, trying lingva.garudalinux.org");
+
+          origin = "lingva.garudalinux.org";
+          break;
+        default:
+          throw Exception('Failed to load translation');
+      }
+
+      return await fetchData(text, origin);
     }
   }
 
@@ -479,7 +505,7 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
 
       for (final textBlock in recognizedText.blocks) {
         // final String text = await onDeviceTranslator.translateText(textBlock.text);
-        var translatedObj = await fetchData(textBlock.text);
+        var translatedObj = await fetchData(textBlock.text, null);
         final String text = translatedObj["translation"];
         print("object: $text");
 

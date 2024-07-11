@@ -142,62 +142,56 @@ class _ConversationState extends State<Conversation> {
     }
   }
 
+  Future<dynamic> fetchUrl(String text, from, to, origin) async {
+    origin ??= "translate.plausibility.cloud";
+
+    final response = await http.get(Uri.parse('https://$origin/api/v1/$from/$to/$text'));
+
+    if (response.statusCode == 200 && text.isNotEmpty) {
+      return jsonDecode(response.body);
+    } else {
+      switch (origin) {
+        case "translate.plausibility.cloud":
+          print("translate.plausibility.cloud not working, trying lingva.ml");
+
+          origin = "lingva.ml";
+          break;
+        case "translate.plausibility.cloud":
+          print("translate.plausibility.cloud not working, trying lingva.lunar.icu");
+
+          origin = "lingva.lunar.icu";
+          break;
+        case "lingva.lunar.icu":
+          print("lingva.lunar.icu not working, trying translate.dr460nf1r3.org");
+
+          origin = "translate.dr460nf1r3.org";
+          break;
+        case "translate.dr460nf1r3.org":
+          print("translate.dr460nf1r3.org not working, trying lingva.garudalinux.org");
+
+          origin = "lingva.garudalinux.org";
+          break;
+        default:
+          throw Exception('Failed to load translation');
+      }
+      return await fetchUrl(text, from, to, origin);
+    }
+  }
+
   Future<dynamic> fetchData(String text, int? man) async {
     String fromLang =
         firstMan["code"] == "auto" || firstMan["code"] == null ? "en" : firstMan["code"]!;
 
+    String targetLang;
     if (man == 2) {
-      final response = await http
-          .get(Uri.parse('https://lingva.ml/api/v1/${secondMan["code"]}/$fromLang/$text'));
-
-      if (response.statusCode == 200 && text.isNotEmpty) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to load suggestions');
-      }
+      targetLang = secondMan["code"]!;
     } else if (man == 1) {
-      final response = await http.get(
-          Uri.parse('https://lingva.ml/api/v1/${firstMan["code"]}/${secondMan["code"]}/$text'));
-
-      if (response.statusCode == 200 && text.isNotEmpty) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to load suggestions');
-      }
+      targetLang = secondMan["code"]!;
     } else {
-      if (currentMan == 1) {
-        final response = await http.get(
-            Uri.parse('https://lingva.ml/api/v1/${firstMan["code"]}/${secondMan["code"]}/$text'));
-
-        if (response.statusCode == 200 && text.isNotEmpty) {
-          return jsonDecode(response.body);
-        } else {
-          throw Exception('Failed to load suggestions');
-        }
-      } else {
-        if (currentMan == 1) {
-          final response = await http.get(
-              Uri.parse('https://lingva.ml/api/v1/${firstMan["code"]}/${secondMan["code"]}/$text'));
-
-          if (response.statusCode == 200 && text.isNotEmpty) {
-            return jsonDecode(response.body);
-          } else {
-            throw Exception('Failed to load suggestions');
-          }
-        } else {
-          final response = await http
-              .get(Uri.parse('https://lingva.ml/api/v1/${secondMan["code"]}/$fromLang/$text'));
-
-          if (response.statusCode == 200 && text.isNotEmpty) {
-            return jsonDecode(response.body);
-          } else {
-            print(
-                "${response.body} ${'https://lingva.ml/api/v1/${secondMan["code"]}/$fromLang/$text'}");
-            throw Exception('Failed to load suggestions');
-          }
-        }
-      }
+      targetLang = currentMan == 1 ? secondMan["code"]! : fromLang;
     }
+
+    return fetchUrl(text, firstMan["code"], targetLang, null);
   }
 
   /// Each time to start a speech recognition session

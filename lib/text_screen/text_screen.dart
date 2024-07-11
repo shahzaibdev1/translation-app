@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:intl/intl.dart';
@@ -121,14 +120,40 @@ class _TextScreenState extends State<TextScreen> {
     });
   }
 
-  Future<dynamic> fetchData(String text) async {
+  Future<dynamic> fetchData(String text, String? origin) async {
+    origin ??= "translate.plausibility.cloud";
+
     final response = await http.get(Uri.parse(
-        'https://lingva.ml/api/v1/${_selectedFromLang["code"]}/${_selectedToLang["code"]}/${text}'));
+        'https://${origin}/api/v1/${_selectedFromLang["code"]}/${_selectedToLang["code"]}/${text}'));
 
     if (response.statusCode == 200 && text.isNotEmpty) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to load translation');
+      switch (origin) {
+        case "translate.plausibility.cloud":
+          print("translate.plausibility.cloud not working, trying lingva.ml");
+
+          origin = "lingva.ml";
+          break;
+        case "translate.plausibility.cloud":
+          print("translate.plausibility.cloud not working, trying lingva.lunar.icu");
+
+          origin = "lingva.lunar.icu";
+          break;
+        case "lingva.lunar.icu":
+          print("lingva.lunar.icu not working, trying translate.dr460nf1r3.org");
+
+          origin = "translate.dr460nf1r3.org";
+          break;
+        case "translate.dr460nf1r3.org":
+          print("translate.dr460nf1r3.org not working, trying lingva.garudalinux.org");
+
+          origin = "lingva.garudalinux.org";
+          break;
+        default:
+          throw Exception('Failed to load translation');
+      }
+      return await fetchData(text, origin);
     }
   }
 
@@ -136,6 +161,7 @@ class _TextScreenState extends State<TextScreen> {
     setState(() {
       isLoading = true;
     });
+
     final ThemeData theme = Theme.of(context);
 
     try {
@@ -155,7 +181,8 @@ class _TextScreenState extends State<TextScreen> {
         return;
       }
 
-      var translatedObj = await fetchData(text);
+      var translatedObj = await fetchData(text, null);
+      print("text: $text");
 
       if (translatedObj["translation"] != null) {
         var translatedText = translatedObj["translation"];

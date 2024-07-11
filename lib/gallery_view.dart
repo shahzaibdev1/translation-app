@@ -58,7 +58,7 @@ class _GalleryViewState extends State<GalleryView> {
 
           // var translatedText = await onDeviceTranslator
           //     .translateText(widget.text!.replaceFirst('Recognized text:', '').trim());
-          var translatedObj = await fetchData(sourceLang, targetLang, widget.text!);
+          var translatedObj = await fetchData(sourceLang, targetLang, widget.text!, null);
           if (translatedObj && translatedObj["translation"] != null) {
             var translatedText = translatedObj["translation"];
 
@@ -73,14 +73,41 @@ class _GalleryViewState extends State<GalleryView> {
     onUpdateWidget();
   }
 
-  Future<dynamic> fetchData(selectedFromLang, selectedToLang, String text) async {
+  Future<dynamic> fetchData(selectedFromLang, selectedToLang, String text, String? origin) async {
+    origin ??= "translate.plausibility.cloud";
+
     final response = await http.get(Uri.parse(
-        'https://lingva.ml/api/v1/${selectedFromLang["code"]}/${selectedToLang["code"]}/$text'));
+        'https://$origin/api/v1/${selectedFromLang["code"]}/${selectedToLang["code"]}/$text'));
 
     if (response.statusCode == 200 && text.isNotEmpty) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to load translation');
+      switch (origin) {
+        case "translate.plausibility.cloud":
+          print("translate.plausibility.cloud not working, trying lingva.ml");
+
+          origin = "lingva.ml";
+          break;
+        case "translate.plausibility.cloud":
+          print("translate.plausibility.cloud not working, trying lingva.lunar.icu");
+
+          origin = "lingva.lunar.icu";
+          break;
+        case "lingva.lunar.icu":
+          print("lingva.lunar.icu not working, trying translate.dr460nf1r3.org");
+
+          origin = "translate.dr460nf1r3.org";
+          break;
+        case "translate.dr460nf1r3.org":
+          print("translate.dr460nf1r3.org not working, trying lingva.garudalinux.org");
+
+          origin = "lingva.garudalinux.org";
+          break;
+        default:
+          throw Exception('Failed to load translation');
+      }
+
+      return await fetchData(selectedFromLang, selectedToLang, text, origin);
     }
   }
 
