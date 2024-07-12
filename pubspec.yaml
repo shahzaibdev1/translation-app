@@ -1,5 +1,5 @@
 name: translation_app
-description: "A new Flutter project."
+description: "An app to translate text between various languages, scan camera or images to translate text."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
@@ -52,6 +52,7 @@ dependencies:
   url_launcher: ^6.2.6
   carousel_slider: ^4.2.1
   permission_handler: ^11.3.1
+  google_mobile_ads: ^5.1.0
   
 dev_dependencies:
   flutter_test:

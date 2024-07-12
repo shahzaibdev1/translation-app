@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:http/http.dart' as http;
+import 'package:translation_app/ads/native_ad.dart';
 
 class ResultScreen extends StatefulWidget {
   final String text;
@@ -74,8 +76,8 @@ class _ResultScreenState extends State<ResultScreen> {
                         padding: const EdgeInsets.all(16.0),
                         child: ListView(
                             children: _result
-                                .map((res) => Column(
-                                      children: res["meanings"].map<Widget>((meaning) {
+                                .map((res) => Column(children: [
+                                      ...res["meanings"].map<Widget>((meaning) {
                                         return SizedBox(
                                             width: MediaQuery.of(context).size.width,
                                             child: Card(
@@ -152,7 +154,14 @@ class _ResultScreenState extends State<ResultScreen> {
                                                           }).toList()
                                                         ]))));
                                       }).toList(),
-                                    ))
+                                      NativeAdWidget(
+                                          width: 320,
+                                          height: 320,
+                                          maxW: MediaQuery.of(context).size.width,
+                                          maxH: 400,
+                                          type: TemplateType.medium,
+                                          adId: "ca-app-pub-3940256099942544/2247696110")
+                                    ]))
                                 .toList()))));
   }
 }
