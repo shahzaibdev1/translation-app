@@ -8,6 +8,8 @@ import 'dart:async';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+const bool isTestAd = true;
+
 Future<String> getAssetPath(String asset) async {
   final path = await getLocalPath(asset);
   await Directory(dirname(path)).create(recursive: true);

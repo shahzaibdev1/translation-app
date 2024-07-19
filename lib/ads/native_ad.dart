@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:translation_app/utils/utils.dart';
 // import 'package:provider/provider.dart';
 
 class NativeAdWidget extends StatefulWidget {
@@ -30,6 +31,7 @@ class NativeAdWidgetState extends State<NativeAdWidget> {
   // This is the test unit ID, only used when testing...
 
   final String _testAdUnitId = 'ca-app-pub-3940256099942544/2247696110';
+  final String _adUnitId = 'ca-app-pub-4335977416487659/4711722157';
 
   /// Loads a native ad.
   void loadAd() async {
@@ -37,7 +39,7 @@ class NativeAdWidgetState extends State<NativeAdWidget> {
     ConsentStatus status = await ConsentInformation.instance.getConsentStatus();
 
     nativeAd = NativeAd(
-        adUnitId: _testAdUnitId,
+        adUnitId: isTestAd ? _testAdUnitId : _adUnitId,
         listener: NativeAdListener(
           onAdLoaded: (ad) {
             print('$NativeAd loaded.');
@@ -98,7 +100,6 @@ class NativeAdWidgetState extends State<NativeAdWidget> {
 
   @override
   void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
     super.didChangeDependencies();
     loadAd();
   }

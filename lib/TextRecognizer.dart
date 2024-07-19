@@ -185,7 +185,7 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
             left: 0,
             right: 0,
             child: Center(
-                child: Container(
+                child: SizedBox(
                     width: MediaQuery.of(context).size.width * 0.87,
                     child: Row(
                       children: [
@@ -327,7 +327,7 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
   void _onToSelected(lang, int idx, BuildContext ctx) {
     setState(() {
       _selectedToLang = lang;
-      _selectedLanguage = idx;
+      // _selectedLanguage = idx;
 
       toLanguage = lang;
     });
@@ -496,9 +496,6 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
     final recognizedText = await _textRecognizer.processImage(inputImage);
     if (inputImage.metadata?.size != null && inputImage.metadata?.rotation != null) {
       List<Map<String, dynamic>> lst = [];
-
-      final sourceLang = fromLanguages[_selectedLanguage]["target"];
-      final targetLang = toLanguage;
 
       // final onDeviceTranslator =
       //     OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);

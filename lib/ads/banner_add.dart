@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:translation_app/utils/utils.dart';
 // import 'package:provider/provider.dart';
 
 class TranslationBannerAd extends StatefulWidget {
@@ -37,7 +38,7 @@ class _TranslationBannerAdState extends State<TranslationBannerAd> {
   BannerAd? _bannerAd;
   AdSize adSize = AdSize.fullBanner;
 
-  // final String adUnitId = "ca-app-pub-4335977416487659/2750151685";
+  final String adUnitId = "ca-app-pub-4335977416487659/5181677208";
 
   /// Loads a banner ad.
   Future<void> loadAd() async {
@@ -54,7 +55,7 @@ class _TranslationBannerAdState extends State<TranslationBannerAd> {
     }
 
     _bannerAd = BannerAd(
-      adUnitId: testAdUnitId,
+      adUnitId: isTestAd ? testAdUnitId : adUnitId,
       size: size,
       request: AdRequest(
           nonPersonalizedAds:

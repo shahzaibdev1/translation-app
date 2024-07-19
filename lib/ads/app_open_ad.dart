@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:translation_app/utils/utils.dart';
 // import 'package:provider/provider.dart';
 
 const String testAdId = 'ca-app-pub-3940256099942544/9257395921';
@@ -58,12 +59,12 @@ class AppOpenAdManager {
     // Set a timeout of 3 seconds for ad loading
     const timeout = Duration(seconds: 4);
 
-    // const String adUnitId = 'ca-app-pub-4335977416487659/1109132491';
+    const String adUnitId = 'ca-app-pub-4335977416487659/4272738451';
     try {
       // Attempt to load the ad within the timeout
       await Future.any([
         AppOpenAd.load(
-          adUnitId: testAdId,
+          adUnitId: isTestAd ? testAdId : adUnitId,
           request: AdRequest(
             nonPersonalizedAds:
                 status == ConsentStatus.obtained || status == ConsentStatus.notRequired,
