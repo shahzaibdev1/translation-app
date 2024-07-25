@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
-class SpeachToTextProvider extends ChangeNotifier {
+class SpeechToTextProvider extends ChangeNotifier {
   String status = "notListening";
   final SpeechToText _speechToText = SpeechToText();
   int idx = 0;
 
-  SpeachToTextProvider() {
+  SpeechToTextProvider() {
     initialize();
   }
 

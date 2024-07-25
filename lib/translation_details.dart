@@ -49,6 +49,7 @@ class _TranslationDetailsState extends State<TranslationDetails> {
                   height: MediaQuery.of(context).size.height * 0.2,
                   // color: Colors.white54,
                   alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(children: [
                     SelectableText(widget.text.map((e) => e["text"]).join("\n"), maxLines: 4),
                     const Divider(),
@@ -85,6 +86,7 @@ class _TranslationDetailsState extends State<TranslationDetails> {
 
     return Scaffold(
         appBar: AppBar(
+          bottomOpacity: 0,
           title: const Text("Translation"),
         ),
         body: PopScope(

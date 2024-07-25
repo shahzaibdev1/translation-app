@@ -19,9 +19,9 @@ void main() => runApp(MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) => NavigationStatus()),
-          ChangeNotifierProvider(create: (_) => SpeachToTextProvider()),
+          ChangeNotifierProvider(create: (_) => SpeechToTextProvider()),
         ],
-        child: Consumer3<ThemeProvider, NavigationStatus, SpeachToTextProvider>(
+        child: Consumer3<ThemeProvider, NavigationStatus, SpeechToTextProvider>(
             builder: (context, themeProvider, navigationStatus, speachToTextProvider, child) {
           return MaterialApp(
               theme: themeProvider.isDarkMode

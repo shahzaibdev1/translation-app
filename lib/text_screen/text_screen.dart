@@ -17,6 +17,7 @@ import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
 import 'package:translation_app/favorites/favorites.dart';
 import 'package:translation_app/providers/speech_to_text.dart';
+import 'package:translation_app/utils/ripple_effect.dart';
 import 'package:translation_app/utils/utils.dart';
 
 class TextScreen extends StatefulWidget {
@@ -96,7 +97,7 @@ class _TextScreenState extends State<TextScreen> {
   void _startListening() async {
     var status = await Permission.microphone.status;
 
-    Provider.of<SpeachToTextProvider>(context, listen: false)
+    Provider.of<SpeechToTextProvider>(context, listen: false)
         .startListening(onResult: _onSpeechResult, idx: 1);
     setState(() {});
   }
@@ -106,7 +107,7 @@ class _TextScreenState extends State<TextScreen> {
   /// and the SpeechToText plugin supports setting timeouts on the
   /// listen method.
   void _stopListening() {
-    Provider.of<SpeachToTextProvider>(context, listen: false).stopListening();
+    Provider.of<SpeechToTextProvider>(context, listen: false).stopListening();
     setState(() {});
   }
 
@@ -617,20 +618,46 @@ class _TextScreenState extends State<TextScreen> {
                                     );
                                   },
                                   icon: const Icon(Icons.camera_alt)),
-                              IconButton.filled(
-                                  onPressed: Provider.of<SpeachToTextProvider>(context).status ==
-                                          "listening"
-                                      ? _stopListening
-                                      : _startListening,
-                                  icon: Provider.of<SpeachToTextProvider>(context).status ==
-                                          "listening"
-                                      ? SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            color: theme.colorScheme.onPrimary,
-                                          ))
-                                      : const Icon(Icons.mic)),
+                              // IconButton.filled(
+                              //   onPressed:
+                              //       Provider.of<SpeachToTextProvider>(context).status == "listening"
+                              //           ? _stopListening
+                              //           : _startListening,
+                              //   icon: Transform.scale(
+                              //     scale: 1,
+                              //     child: Icon(Icons.mic),
+                              //   ),
+                              // ),
+                              // The InkWell wraps the custom flat button widget.
+                              Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                                  child: RippleEffectContainer(
+                                    width: 40,
+                                    height: 40,
+                                    onTap: Provider.of<SpeechToTextProvider>(context).status ==
+                                            "listening"
+                                        ? _stopListening
+                                        : _startListening,
+                                    color: theme.primaryColor,
+                                    isEnabled: Provider.of<SpeechToTextProvider>(context).status ==
+                                        "listening",
+                                    icon: const Icon(Icons.mic, color: Colors.white),
+                                    duration: const Duration(seconds: 1),
+                                  )),
+                              // IconButton.filled(
+                              // onPressed: Provider.of<SpeachToTextProvider>(context).status ==
+                              //         "listening"
+                              //     ? _stopListening
+                              //     : _startListening,
+                              // icon: Provider.of<SpeachToTextProvider>(context).status ==
+                              //         "listening"
+                              //     ? SizedBox(
+                              //         width: 20,
+                              //         height: 20,
+                              //         child: CircularProgressIndicator(
+                              //           color: theme.colorScheme.onPrimary,
+                              //         ))
+                              //     : const Icon(Icons.mic)),
                               SizedBox(
                                   width: 130,
                                   // height: 20,

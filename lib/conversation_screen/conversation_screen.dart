@@ -14,6 +14,7 @@ import 'package:translation_app/conversation_screen/pressable_badge.dart';
 import 'package:translation_app/db/db_helper.dart';
 import 'package:translation_app/drawer/drawer.dart';
 import 'package:translation_app/providers/speech_to_text.dart';
+import 'package:translation_app/utils/ripple_effect.dart';
 import 'package:translation_app/utils/utils.dart';
 
 class Conversation extends StatefulWidget {
@@ -95,7 +96,7 @@ class _ConversationState extends State<Conversation> {
 
   /// Each time to start a speech recognition session
   void _startListening() {
-    Provider.of<SpeachToTextProvider>(context, listen: false)
+    Provider.of<SpeechToTextProvider>(context, listen: false)
         .startListening(onResult: _onSpeechResult, idx: 2);
   }
 
@@ -104,7 +105,7 @@ class _ConversationState extends State<Conversation> {
   /// and the SpeechToText plugin supports setting timeouts on the
   /// listen method.
   void _stopListening() {
-    Provider.of<SpeachToTextProvider>(context, listen: false).stopListening();
+    Provider.of<SpeechToTextProvider>(context, listen: false).stopListening();
   }
 
   /// This is the callback that the SpeechToText plugin calls when
@@ -196,7 +197,7 @@ class _ConversationState extends State<Conversation> {
 
   /// Each time to start a speech recognition session
   void _startListening1() async {
-    Provider.of<SpeachToTextProvider>(context, listen: false)
+    Provider.of<SpeechToTextProvider>(context, listen: false)
         .startListening(onResult: _onSpeechResult1, idx: 3);
 
     // setState(() {
@@ -209,7 +210,7 @@ class _ConversationState extends State<Conversation> {
   /// and the SpeechToText plugin supports setting timeouts on the
   /// listen method.
   void _stopListening1() {
-    Provider.of<SpeachToTextProvider>(context, listen: false).stopListening();
+    Provider.of<SpeechToTextProvider>(context, listen: false).stopListening();
   }
 
   /// This is the callback that the SpeechToText plugin calls when
@@ -557,6 +558,9 @@ class _ConversationState extends State<Conversation> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
+    print(
+        "Currently listening: ${Provider.of<SpeechToTextProvider>(context).idx == 2} ${Provider.of<SpeechToTextProvider>(context).status == 'listening'}");
+
     return Scaffold(
         drawer: const DrawerWidget(),
         appBar: AppBar(
@@ -672,22 +676,37 @@ class _ConversationState extends State<Conversation> {
                     children: [
                       Column(
                         children: [
-                          IconButton.filled(
-                              style: ButtonStyle(
-                                  backgroundColor: MaterialStatePropertyAll(
-                                      theme.colorScheme.primary.withAlpha(150))),
-                              onPressed: Provider.of<SpeachToTextProvider>(context).status ==
-                                          "listening" &&
-                                      Provider.of<SpeachToTextProvider>(context).idx == 2
-                                  ? _stopListening
-                                  : _startListening,
-                              icon: Provider.of<SpeachToTextProvider>(context).status ==
-                                          "listening" &&
-                                      Provider.of<SpeachToTextProvider>(context).idx == 2
-                                  ? const SizedBox(
-                                      width: 25, height: 25, child: CircularProgressIndicator())
-                                  : Icon(Icons.mic, color: theme.colorScheme.onBackground),
-                              padding: const EdgeInsets.all(20)),
+                          RippleEffectContainer(
+                            width: 60,
+                            height: 60,
+                            onTap:
+                                Provider.of<SpeechToTextProvider>(context).status == "listening" &&
+                                        Provider.of<SpeechToTextProvider>(context).idx == 2
+                                    ? _stopListening
+                                    : _startListening,
+                            color: theme.colorScheme.primary,
+                            isEnabled:
+                                Provider.of<SpeechToTextProvider>(context).status == "listening" &&
+                                    Provider.of<SpeechToTextProvider>(context).idx == 2,
+                            icon: const Icon(Icons.mic, color: Colors.white),
+                            duration: const Duration(seconds: 1),
+                          ),
+                          // IconButton.filled(
+                          //     style: ButtonStyle(
+                          //         backgroundColor: MaterialStatePropertyAll(
+                          //             theme.colorScheme.primary.withAlpha(150))),
+                          //     onPressed: Provider.of<SpeechToTextProvider>(context).status ==
+                          //                 "listening" &&
+                          //             Provider.of<SpeechToTextProvider>(context).idx == 2
+                          //         ? _stopListening
+                          //         : _startListening,
+                          //     icon: Provider.of<SpeechToTextProvider>(context).status ==
+                          //                 "listening" &&
+                          //             Provider.of<SpeechToTextProvider>(context).idx == 2
+                          //         ? const SizedBox(
+                          //             width: 25, height: 25, child: CircularProgressIndicator())
+                          //         : Icon(Icons.mic, color: theme.colorScheme.onBackground),
+                          //     padding: const EdgeInsets.all(20)),
                           const Divider(),
                           ConstrainedBox(
                             constraints:
@@ -710,22 +729,37 @@ class _ConversationState extends State<Conversation> {
                       // IconButton(onPressed: onPressed, icon: Icon(Icons)),
                       Column(
                         children: [
-                          IconButton.filled(
-                              style: ButtonStyle(
-                                  backgroundColor: MaterialStatePropertyAll(
-                                      theme.colorScheme.primary.withAlpha(150))),
-                              onPressed: Provider.of<SpeachToTextProvider>(context).status ==
-                                          "listening" &&
-                                      Provider.of<SpeachToTextProvider>(context).idx == 3
-                                  ? _stopListening1
-                                  : _startListening1,
-                              icon: Provider.of<SpeachToTextProvider>(context).status ==
-                                          "listening" &&
-                                      Provider.of<SpeachToTextProvider>(context).idx == 3
-                                  ? const SizedBox(
-                                      width: 25, height: 25, child: CircularProgressIndicator())
-                                  : Icon(Icons.mic, color: theme.colorScheme.onBackground),
-                              padding: const EdgeInsets.all(20)),
+                          RippleEffectContainer(
+                            width: 60,
+                            height: 60,
+                            onTap:
+                                Provider.of<SpeechToTextProvider>(context).status == "listening" &&
+                                        Provider.of<SpeechToTextProvider>(context).idx == 3
+                                    ? _stopListening1
+                                    : _startListening1,
+                            color: theme.colorScheme.primary,
+                            isEnabled:
+                                Provider.of<SpeechToTextProvider>(context).status == "listening" &&
+                                    Provider.of<SpeechToTextProvider>(context).idx == 3,
+                            icon: const Icon(Icons.mic, color: Colors.white),
+                            duration: const Duration(seconds: 1),
+                          ),
+                          // IconButton.filled(
+                          //     style: ButtonStyle(
+                          //         backgroundColor: MaterialStatePropertyAll(
+                          //             theme.colorScheme.primary.withAlpha(150))),
+                          //     onPressed: Provider.of<SpeechToTextProvider>(context).status ==
+                          //                 "listening" &&
+                          //             Provider.of<SpeechToTextProvider>(context).idx == 3
+                          //         ? _stopListening1
+                          //         : _startListening1,
+                          //     icon: Provider.of<SpeechToTextProvider>(context).status ==
+                          //                 "listening" &&
+                          //             Provider.of<SpeechToTextProvider>(context).idx == 3
+                          //         ? const SizedBox(
+                          //             width: 25, height: 25, child: CircularProgressIndicator())
+                          //         : Icon(Icons.mic, color: theme.colorScheme.onBackground),
+                          //     padding: const EdgeInsets.all(20)),
                           const Divider(),
                           ConstrainedBox(
                             constraints:

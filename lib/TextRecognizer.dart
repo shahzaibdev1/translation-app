@@ -500,19 +500,62 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
       // final onDeviceTranslator =
       //     OnDeviceTranslator(sourceLanguage: sourceLang, targetLanguage: targetLang);
 
-      for (final textBlock in recognizedText.blocks) {
-        // final String text = await onDeviceTranslator.translateText(textBlock.text);
-        var translatedObj = await fetchData(textBlock.text, null);
-        final String text = translatedObj["translation"];
-        print("object: $text");
+      // for (final textBlock in recognizedText.blocks) {
+      //   // final String text = await onDeviceTranslator.translateText(textBlock.text);
+      //   var translatedObj = await fetchData(textBlock.text, null);
+      //   final String text = translatedObj["translation"];
+      //   print("object: $text");
 
-        lst.add({
-          "boundingBox": textBlock.boundingBox,
-          "cornerPoints": textBlock.cornerPoints,
-          "lines": textBlock.lines,
-          "text": text,
-          "recognizedLanguages": textBlock.recognizedLanguages
-        });
+      //   lst.add({
+      //     "boundingBox": textBlock.boundingBox,
+      //     "cornerPoints": textBlock.cornerPoints,
+      //     "lines": textBlock.lines,
+      //     "text": text,
+      //     "recognizedLanguages": textBlock.recognizedLanguages
+      //   });
+      // }
+
+      List<Future<Map<String, dynamic>>> futures = [];
+
+      Future<Map<String, dynamic>> fetchAsyncData(String text, TextBlock textBlock) async {
+        // var translatedObj = await onDeviceTranslator.translateText(text);
+        var translatedObj = await fetchData(text, null);
+        if (translatedObj != null && translatedObj["translation"] != null) {
+          var translatedText = translatedObj["translation"];
+
+          return {
+            "boundingBox": textBlock.boundingBox,
+            "cornerPoints": textBlock.cornerPoints,
+            "lines": textBlock.lines,
+            "text": text,
+            "translation": translatedText,
+            "recognizedLanguages": textBlock.recognizedLanguages
+          };
+        } else {
+          return {};
+        }
+      }
+
+      for (final textBlock in recognizedText.blocks) {
+        // Add each fetchData call to the futures list
+        futures.add(fetchAsyncData(textBlock.text, textBlock));
+      }
+
+      // Wait for all the futures to complete
+      List<Map<String, dynamic>?> results = await Future.wait(futures);
+
+      // Process the results
+      for (var result in results) {
+        if (result != null && result["translation"] != null) {
+          var translatedText = result["translation"];
+          lst.add({
+            "boundingBox": result["boundingBox"],
+            "cornerPoints": result["cornerPoints"],
+            "lines": result["lines"],
+            "text": translatedText,
+            "recognizedLanguages": result["recognizedLanguages"]
+          });
+        }
       }
 
       final painter = TextRecognizerPainter(
