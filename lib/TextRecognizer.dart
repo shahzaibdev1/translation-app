@@ -451,7 +451,7 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
     origin ??= "translate.plausibility.cloud";
 
     final response = await http.get(Uri.parse(
-        'https://$origin/api/v1/${_selectedFromLang["code"]}/${_selectedToLang["code"]}/${text}'));
+        'https://$origin/api/v1/${_selectedFromLang["code"]}/${_selectedToLang["code"]}/$text'));
 
     if (response.statusCode == 200 && text.isNotEmpty) {
       return jsonDecode(response.body);

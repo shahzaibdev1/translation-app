@@ -117,12 +117,12 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       },
                     ),
                   )),
-          ListTile(
-            leading: Image.asset("assets/images/language.png", width: 22, height: 22),
-            title:
-                const Text("Language", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-            // onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
-          ),
+          // ListTile(
+          //   leading: Image.asset("assets/images/language.png", width: 22, height: 22),
+          //   title:
+          //       const Text("Language", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+          //   // onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
+          // ),
           ListTile(
             leading: Image.asset("assets/images/rate_us.png", width: 22, height: 22),
             title:

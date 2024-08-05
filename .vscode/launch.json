@@ -11,7 +11,7 @@
       // "args": ["--release"],
       "type": "dart",
       // "deviceId": "emulator-5554"
-      "deviceId": "R58T41YAZSZ"
+      // "deviceId": "R58T41YAZSZ"
     }
   ]
 }

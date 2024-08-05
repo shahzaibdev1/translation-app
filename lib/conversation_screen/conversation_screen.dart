@@ -9,7 +9,6 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translation_app/conversation_screen/pressable_badge.dart';
 import 'package:translation_app/db/db_helper.dart';
 import 'package:translation_app/drawer/drawer.dart';
@@ -34,8 +33,8 @@ class _ConversationState extends State<Conversation> {
   // bool is2Listening = false;
   final FlutterTts _flutterTts = FlutterTts();
 
-  final SpeechToText _speechToText = SpeechToText();
-  final SpeechToText _speechToText1 = SpeechToText();
+  // final SpeechToText _speechToText = SpeechToText();
+  // final SpeechToText _speechToText1 = SpeechToText();
 
   TextEditingController fromTextController = TextEditingController();
   TextEditingController toTextController = TextEditingController();
@@ -557,9 +556,6 @@ class _ConversationState extends State<Conversation> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-
-    print(
-        "Currently listening: ${Provider.of<SpeechToTextProvider>(context).idx == 2} ${Provider.of<SpeechToTextProvider>(context).status == 'listening'}");
 
     return Scaffold(
         drawer: const DrawerWidget(),
