@@ -8,7 +8,10 @@ import 'dart:async';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const bool isTestAd = false;
+const bool isTestAd = true;
+
+const String proIAPId = "com.tal.translater.multi.language.scan.pro";
+const testIAPId = "android.test.purchased";
 
 Future<String> getAssetPath(String asset) async {
   final path = await getLocalPath(asset);

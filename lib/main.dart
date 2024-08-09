@@ -5,6 +5,7 @@ import 'package:translation_app/ads/app_open_ad.dart';
 import 'package:translation_app/ads/banner_add.dart';
 import 'package:translation_app/conversation_screen/conversation_screen.dart';
 import 'package:translation_app/dictionary/dictionary.dart';
+import 'package:translation_app/providers/app_state_provider.dart';
 import 'package:translation_app/providers/navigation_status.dart';
 import 'package:translation_app/providers/speech_to_text.dart';
 import 'package:translation_app/providers/theme_provider.dart';
@@ -19,9 +20,11 @@ void main() => runApp(MultiProvider(
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) => NavigationStatus()),
           ChangeNotifierProvider(create: (_) => SpeechToTextProvider()),
+          ChangeNotifierProvider(create: (_) => AppStateProvider()),
         ],
-        child: Consumer3<ThemeProvider, NavigationStatus, SpeechToTextProvider>(
-            builder: (context, themeProvider, navigationStatus, speachToTextProvider, child) {
+        child: Consumer4<ThemeProvider, NavigationStatus, SpeechToTextProvider, AppStateProvider>(
+            builder: (context, themeProvider, navigationStatus, speachToTextProvider,
+                appStateProvider, child) {
           return MaterialApp(
               theme: themeProvider.isDarkMode
                   ? ThemeData.dark(useMaterial3: true).copyWith(
@@ -69,9 +72,45 @@ class NavigationBarApp extends StatefulWidget {
 class _NavigationBarAppState extends State<NavigationBarApp> {
   late Future<void> _initialization;
 
+  void loadForm() {
+    ConsentForm.loadConsentForm(
+      (ConsentForm consentForm) async {
+        consentForm.show((formError) {
+          print("Some wentt wrong $formError");
+        });
+        // Present the form
+      },
+      (FormError formError) {
+        // Handle the error
+        print("Error something wen wrong $formError");
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Load the consent form for EU customers
+
+      final params = ConsentRequestParameters();
+      ConsentInformation.instance.requestConsentInfoUpdate(
+        params,
+        () async {
+          if (await ConsentInformation.instance.isConsentFormAvailable()) {
+            loadForm();
+          } else {
+            print("consent form is not available");
+          }
+        },
+        (FormError error) {
+          print(error);
+          // Handle the error
+        },
+      );
+    });
+
     _initialization = _loadResources();
   }
 
