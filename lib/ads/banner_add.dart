@@ -148,7 +148,8 @@ class _TranslationBannerAdState extends State<TranslationBannerAd> {
         ),
       );
     } else {
-      return const SizedBox.shrink();
+      return SizedBox(
+          width: AdSize.fullBanner.width.toDouble(), height: AdSize.fullBanner.height.toDouble());
     }
   }
 }

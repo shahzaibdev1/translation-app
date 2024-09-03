@@ -22,7 +22,6 @@ class DictionaryAutocompleteState extends State<DictionaryAutocomplete> {
   bool isLoading = false;
 
   void _getSuggestions(String input) async {
-    final ThemeData theme = Theme.of(context);
     try {
       setState(() {
         isLoading = true;

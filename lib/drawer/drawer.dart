@@ -136,8 +136,8 @@ class _DrawerWidgetState extends State<DrawerWidget> {
             leading: Image.asset("assets/images/rate_us.png", width: 22, height: 22),
             title:
                 const Text("Rate Us", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-            onTap: () => handleOpenInBrowser(
-                "https://play.google.com/store/apps/developer?id=Think+Apps+Lab"),
+            // onTap: () => handleOpenInBrowser(
+            //     "https://play.google.com/store/apps/developer?id=Think+Apps+Lab"),
 
             // onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
           ),
