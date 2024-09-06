@@ -3,8 +3,8 @@
 # min_api: 21
 # common_typos_disable
 # {"id":"com.android.tools.r8.mapping","version":"2.0"}
-# pg_map_id: 1d10677
-# pg_map_hash: SHA-256 1d106771890f328675e4820099f7eb34a6441eafc6a7a567391e9852eae37021
+# pg_map_id: 141400a
+# pg_map_hash: SHA-256 141400a20462294ac7074559af9dc5dc9f48ae69a4db31954640cfa7b15506ff
 _COROUTINE.ArtificialStackFrames -> a.a:
 # {"id":"sourceFile","fileName":"CoroutineDebugging.kt"}
     0:65535:java.lang.StackTraceElement coroutineBoundary():46:46 -> a
@@ -56287,9 +56287,6 @@ com.csdcorp.speech_to_text.SpeechToTextStatus -> h2.t:
     51:67:void <clinit>():67:67 -> <clinit>
     0:65535:void <init>(java.lang.String,int):61:61 -> <init>
     com.csdcorp.speech_to_text.SpeechToTextStatus[] $values() -> c
-com.example.translation_app.MainActivity -> com.example.translation_app.MainActivity:
-# {"id":"sourceFile","fileName":"MainActivity.kt"}
-    0:65535:void <init>():5:5 -> <init>
 com.google.ads.mediation.AbstractAdViewAdapter -> com.google.ads.mediation.AbstractAdViewAdapter:
 # {"id":"sourceFile","fileName":"com.google.android.gms:play-services-ads-lite@@23.0.0"}
     1:5:com.google.android.gms.ads.AdRequest buildAdRequest(android.content.Context,com.google.android.gms.ads.mediation.MediationAdRequest,android.os.Bundle,android.os.Bundle):1:1 -> buildAdRequest
@@ -203429,6 +203426,9 @@ com.google_mlkit_text_recognition.TextRecognizer$$ExternalSyntheticLambda1 -> i6
       # {"id":"com.android.tools.r8.synthesized"}
     void com.google_mlkit_text_recognition.TextRecognizer$$InternalSyntheticLambda$1$baf2a8606230989a3652852e823aa65e7b250e835da0cd66369ec6525e4d79ab$1.onFailure(java.lang.Exception) -> d
       # {"id":"com.android.tools.r8.synthesized"}
+com.tal.translater.multi.language.scan.MainActivity -> com.tal.translater.multi.language.scan.MainActivity:
+# {"id":"sourceFile","fileName":"MainActivity.kt"}
+    0:65535:void <init>():5:5 -> <init>
 com.tekartik.sqflite.Constant -> j6.a:
     java.lang.String[] EMPTY_STRING_ARRAY -> a
     0:65535:void <clinit>():63:63 -> <clinit>

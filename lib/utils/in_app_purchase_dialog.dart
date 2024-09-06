@@ -3,7 +3,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
 import 'package:translation_app/providers/app_state_provider.dart';
 // import 'package:translation_app/src/providers/running_state_provider.dart';
-import 'package:translation_app/utils/utils.dart';
+// import 'package:translation_app/utils/utils.dart';
 
 class InAppPurchaseDialog extends StatefulWidget {
   const InAppPurchaseDialog({super.key});
@@ -15,13 +15,17 @@ class InAppPurchaseDialog extends StatefulWidget {
 class _InAppPurchaseDialogState extends State<InAppPurchaseDialog> {
   Future<void> _getProducts() async {
     try {
-      print("$isTestAd, $testIAPId, $proIAPId");
-      final ProductDetailsResponse response =
-          await InAppPurchase.instance.queryProductDetails({isTestAd ? testIAPId : proIAPId});
+      // Check if IAP is setup and is available
+      var av = await InAppPurchase.instance.isAvailable();
 
+      //  Query product details
+      final ProductDetailsResponse response =
+          await InAppPurchase.instance.queryProductDetails({"android.test.purchased"});
+
+      // Handle if no product ids found
       if (response.notFoundIDs.isNotEmpty) {
         // Handle not found products
-        print("Product not found");
+        print("Product not found, ${response.productDetails}");
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
@@ -31,12 +35,13 @@ class _InAppPurchaseDialogState extends State<InAppPurchaseDialog> {
           margin: EdgeInsets.only(bottom: MediaQuery.of(context).size.height - 100),
           behavior: SnackBarBehavior.floating,
         ));
+        return;
       }
 
+      // Our product is always the first one.
       final ProductDetails productDetails = response.productDetails.first;
 
-      // Use productDetails to display information about your pro version
-
+      // Use productDetails to display information about your pro version and initiate purchase
       final bool purchaseDetails = await InAppPurchase.instance
           .buyNonConsumable(purchaseParam: PurchaseParam(productDetails: productDetails));
 
@@ -84,13 +89,7 @@ class _InAppPurchaseDialogState extends State<InAppPurchaseDialog> {
                       color: Colors.blueAccent[600],
                     )),
                 ListTile(
-                    title: const Text("Continuous scanning/Batch scan"),
-                    leading: Icon(
-                      Icons.check_box_outlined,
-                      color: Colors.blueAccent[600],
-                    )),
-                ListTile(
-                    title: const Text("Confirm scan manually"),
+                    title: const Text("Access to upcomming premium features"),
                     leading: Icon(
                       Icons.check_box_outlined,
                       color: Colors.blueAccent[600],
@@ -107,7 +106,7 @@ class _InAppPurchaseDialogState extends State<InAppPurchaseDialog> {
                   width: MediaQuery.of(context).size.width, // Use full screen width
                   height: 40,
                   child: TextButton(
-                    onPressed: _getProducts,
+                    onPressed: () => _getProducts(),
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(const Color(0xD00584E0)),
                       // Additional styling for text button as needed

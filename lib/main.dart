@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+// import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:translation_app/ads/app_open_ad.dart';
 import 'package:translation_app/ads/banner_add.dart';
 import 'package:translation_app/conversation_screen/conversation_screen.dart';
 import 'package:translation_app/dictionary/dictionary.dart';
 import 'package:translation_app/providers/app_state_provider.dart';
+import 'package:translation_app/providers/interstitialAdProvider.dart';
 import 'package:translation_app/providers/navigation_status.dart';
 import 'package:translation_app/providers/speech_to_text.dart';
 import 'package:translation_app/providers/theme_provider.dart';
@@ -21,10 +26,12 @@ void main() => runApp(MultiProvider(
           ChangeNotifierProvider(create: (_) => NavigationStatus()),
           ChangeNotifierProvider(create: (_) => SpeechToTextProvider()),
           ChangeNotifierProvider(create: (_) => AppStateProvider()),
+          ChangeNotifierProvider(create: (_) => InterStitialAdProvider()),
         ],
-        child: Consumer4<ThemeProvider, NavigationStatus, SpeechToTextProvider, AppStateProvider>(
+        child: Consumer5<ThemeProvider, NavigationStatus, SpeechToTextProvider, AppStateProvider,
+                InterStitialAdProvider>(
             builder: (context, themeProvider, navigationStatus, speachToTextProvider,
-                appStateProvider, child) {
+                appStateProvider, interStitialAdProvider, child) {
           return MaterialApp(
               theme: themeProvider.isDarkMode
                   ? ThemeData.dark(useMaterial3: true).copyWith(
@@ -70,6 +77,7 @@ class NavigationBarApp extends StatefulWidget {
 }
 
 class _NavigationBarAppState extends State<NavigationBarApp> {
+  StreamSubscription<dynamic>? _subscription;
   late Future<void> _initialization;
 
   void loadForm() {
@@ -86,6 +94,37 @@ class _NavigationBarAppState extends State<NavigationBarApp> {
       },
     );
   }
+
+  // void _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) {
+  //   purchaseDetailsList.forEach((PurchaseDetails purchaseDetails) async {
+  //     if (purchaseDetails.status == PurchaseStatus.pending) {
+  //       // _showPendingUI();
+  //       print("Pending Payment");
+  //     } else {
+  //       // print(
+  //       //     "${purchaseDetails.productID}, ${purchaseDetails.verificationData.localVerificationData} verificationData");
+  //       if (purchaseDetails.status == PurchaseStatus.error) {
+  //         // _handleError(purchaseDetails.error!);
+  //         Provider.of<AppStateProvider>(context, listen: false).setUnpaid();
+  //         print(purchaseDetails.error);
+  //       } else if (purchaseDetails.status == PurchaseStatus.purchased ||
+  //           purchaseDetails.status == PurchaseStatus.restored) {
+  //         // bool valid = await _verifyPurchase(purchaseDetails);
+  //         Provider.of<AppStateProvider>(context, listen: false).setPaid();
+  //         print("Purchased, verify if required");
+
+  //         // if (valid) {
+  //         //   _deliverProduct(purchaseDetails);
+  //         // } else {
+  //         //   _handleInvalidPurchase(purchaseDetails);
+  //         // }
+  //       }
+  //       if (purchaseDetails.pendingCompletePurchase) {
+  //         await InAppPurchase.instance.completePurchase(purchaseDetails);
+  //       }
+  //     }
+  //   });
+  // }
 
   @override
   void initState() {
@@ -110,15 +149,36 @@ class _NavigationBarAppState extends State<NavigationBarApp> {
         },
       );
     });
+    // InAppPurchase.instance.restorePurchases();
+
+    // final Stream purchaseUpdated = InAppPurchase.instance.purchaseStream;
+    // _subscription = purchaseUpdated.listen((purchaseDetailsList) {
+    //   _listenToPurchaseUpdated(purchaseDetailsList);
+    // }, onDone: () {
+    //   _subscription?.cancel();
+    // }, onError: (error) {
+    //   // handle error here.
+    //   Provider.of<AppStateProvider>(context, listen: false).setUnpaid();
+    // });
 
     _initialization = _loadResources();
   }
 
+  loadPaidCheck() async {
+    // bool? isPaid = await ConfigStorage.getPaid();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? isPaid = prefs.getBool("isPaid");
+    if (isPaid == true && mounted) {
+      Provider.of<AppStateProvider>(context, listen: false).setPaid();
+    } else if (mounted) {
+      await MobileAds.instance.initialize();
+      await AppOpenAdManager.instance.loadAd(context);
+      Provider.of<InterStitialAdProvider>(context, listen: false).loadAd(context: context);
+    }
+  }
+
   Future<void> _loadResources() async {
-    await MobileAds.instance.initialize();
-
-    await AppOpenAdManager.instance.loadAd(context);
-
+    loadPaidCheck();
     await Future.delayed(const Duration(seconds: 5));
   }
 
@@ -167,11 +227,13 @@ class _NavigationBarAppState extends State<NavigationBarApp> {
           );
         } else {
           return const Scaffold(
+              resizeToAvoidBottomInset: false, // Keeps the bottom bar fixed
+
               // height: MediaQuery.sizeOf(context).height,
               body: Column(children: [
-            Expanded(child: NavigationExample()),
-            TranslationBannerAd(size: "full")
-          ]));
+                Expanded(child: NavigationExample()),
+                TranslationBannerAd(size: "full")
+              ]));
         }
       },
     );

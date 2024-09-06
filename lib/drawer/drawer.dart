@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:translation_app/history/history.dart';
+import 'package:translation_app/providers/interstitialAdProvider.dart';
 import 'package:translation_app/providers/theme_provider.dart';
-import 'package:translation_app/utils/in_app_purchase_dialog.dart';
+// import 'package:translation_app/utils/in_app_purchase_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DrawerWidget extends StatefulWidget {
@@ -74,29 +76,27 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     ],
                   ))),
           InkWell(
-              onTap: () {
-                Navigator.of(context)
-                    .push(MaterialPageRoute(builder: (context) => const InAppPurchaseDialog()));
-              },
+              // onTap: () {
+              //   Navigator.of(context)
+              //       .push(MaterialPageRoute(builder: (context) => const InAppPurchaseDialog()));
+              // },
               child: Ink(
                   child: Container(
-                height: 100,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/banner.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-                child: const ListTile(
-                  title: Text('Get Premium',
-                      style: TextStyle(
-                          color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                  subtitle: Text('Remove ads by upgrading to premium',
-                      style: TextStyle(
-                          color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                  // Other ListTile properties...
-                ),
-              ))),
+            height: 100,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/banner.png'),
+                fit: BoxFit.fill,
+              ),
+            ),
+            child: const ListTile(
+              title: Text('Get Premium',
+                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              subtitle: Text('Remove ads by upgrading to premium',
+                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+              // Other ListTile properties...
+            ),
+          ))),
           ListTile(
             leading: const Icon(
               color: Color(0xff727272),
@@ -120,6 +120,8 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       builder: (context) {
                         return Builder(
                           builder: (context) {
+                            Provider.of<InterStitialAdProvider>(context, listen: false).openAd();
+
                             return const History();
                           },
                         );
@@ -136,14 +138,14 @@ class _DrawerWidgetState extends State<DrawerWidget> {
             leading: Image.asset("assets/images/rate_us.png", width: 22, height: 22),
             title:
                 const Text("Rate Us", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-            // onTap: () => handleOpenInBrowser(
-            //     "https://play.google.com/store/apps/developer?id=Think+Apps+Lab"),
+            onTap: () => handleOpenInBrowser(
+                "https://play.google.com/store/apps/details?id=com.tal.translater.multi.language.scan"),
 
             // onTap: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
           ),
           ListTile(
-            // onTap: () => handleOpenInBrowser(
-            //     "https://play.google.com/store/apps/developer?id=Think+Apps+Lab"),
+            onTap: () => Share.share(
+                "https://play.google.com/store/apps/details?id=com.qr.scanner.barcode.reader.tas"),
             leading: Image.asset("assets/images/share.png", width: 22, height: 22),
             title: const Text("Share App",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:translation_app/db/db_helper.dart';
 import 'package:translation_app/dictionary/result_screen.dart';
+import 'package:translation_app/providers/interstitialAdProvider.dart';
 
 import 'dart:convert';
 
@@ -79,6 +81,7 @@ class DictionaryAutocompleteState extends State<DictionaryAutocomplete> {
 
   void openResult(String text) async {
     DateTime time = DateTime.now();
+    await Provider.of<InterStitialAdProvider>(context, listen: false).openAd();
 
     Navigator.push(context, MaterialPageRoute(builder: (context) => ResultScreen(text: text)));
     final dbHelper = DatabaseHelper();
@@ -166,9 +169,7 @@ class DictionaryAutocompleteState extends State<DictionaryAutocomplete> {
                   return ListTile(
                     title: Text(suggestion),
                     onTap: () {
-                      setState(() {
-                        openResult(suggestion);
-                      });
+                      openResult(suggestion);
                     },
                   );
                 },

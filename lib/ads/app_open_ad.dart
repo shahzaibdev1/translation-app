@@ -28,36 +28,8 @@ class AppOpenAdManager {
   Future<void> loadAd(BuildContext context) async {
     ConsentStatus status = await ConsentInformation.instance.getConsentStatus();
 
-    // We will implement this below.
-    // showDialog(
-    //     context: context,
-    //     builder: (BuildContext ctt) {
-    //       ctx = ctt;
-    //       return Dialog.fullscreen(
-    //           // backgroundColor: Colors.transparent,
-    //           // shape: BeveledRectangleBorder(),
-
-    //           child: Stack(alignment: Alignment.center, children: [
-    //         Container(
-    //             height: MediaQuery.of(context).size.height,
-    //             width: MediaQuery.of(context).size.width,
-    //             color: Colors.black,
-    //             child: const Column(
-    //               crossAxisAlignment: CrossAxisAlignment.center,
-    //               mainAxisAlignment: MainAxisAlignment.center,
-    //               children: [
-    //                 CircularProgressIndicator(),
-    //                 Text(
-    //                   "Loading...",
-    //                   textAlign: TextAlign.center,
-    //                 )
-    //               ],
-    //             ))
-    //       ]));
-    //     });
-
     // Set a timeout of 3 seconds for ad loading
-    const timeout = Duration(seconds: 4);
+    const timeout = Duration(seconds: 3);
 
     const String adUnitId = 'ca-app-pub-4335977416487659/4272738451';
     try {

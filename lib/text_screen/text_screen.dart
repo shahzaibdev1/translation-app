@@ -16,6 +16,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:share_plus/share_plus.dart';
 import 'package:translation_app/favorites/favorites.dart';
+import 'package:translation_app/providers/interstitialAdProvider.dart';
 import 'package:translation_app/providers/speech_to_text.dart';
 import 'package:translation_app/utils/ripple_effect.dart';
 import 'package:translation_app/utils/utils.dart';
@@ -95,8 +96,6 @@ class _TextScreenState extends State<TextScreen> {
 
   /// Each time to start a speech recognition session
   void _startListening() async {
-    var status = await Permission.microphone.status;
-
     Provider.of<SpeechToTextProvider>(context, listen: false)
         .startListening(onResult: _onSpeechResult, idx: 1);
     setState(() {});
@@ -483,7 +482,9 @@ class _TextScreenState extends State<TextScreen> {
           title: const Text("Translator"),
           actions: [
             IconButton(
-                onPressed: () {
+                onPressed: () async {
+                  await Provider.of<InterStitialAdProvider>(context, listen: false).openAd();
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
