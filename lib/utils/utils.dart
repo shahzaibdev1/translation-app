@@ -8,7 +8,7 @@ import 'dart:async';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const bool isTestAd = true;
+const bool isTestAd = false;
 
 const String proIAPId = "com.tal.translater.multi.language.scan.pro";
 const testIAPId = "android.test.purchased";
