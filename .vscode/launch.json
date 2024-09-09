@@ -8,7 +8,7 @@
       "name": "Translation app",
       "request": "launch",
       "program": "lib/main.dart",
-      "args": ["--release"],
+      // "args": ["--release"],
       "type": "dart",
       // "deviceId": "emulator-5554"
       // "deviceId": "R58T41YAZSZ"

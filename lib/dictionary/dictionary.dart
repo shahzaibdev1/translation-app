@@ -13,18 +13,21 @@ class DictionaryScreen extends StatefulWidget {
 class _DictionaryScreenState extends State<DictionaryScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        drawer: const DrawerWidget(),
-        appBar: AppBar(
-          title: const Text("Translator"),
-        ),
-        body: SafeArea(
-            child: Center(
-                child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
-                    child: ListView(children: const [
-                      DictionaryAutocomplete(),
-                      WordOfTheDay(),
-                    ])))));
+    return GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Scaffold(
+            drawer: const DrawerWidget(),
+            appBar: AppBar(
+              title: const Text("Translator"),
+            ),
+            body: SafeArea(
+                child: Center(
+                    child: ConstrainedBox(
+                        constraints:
+                            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
+                        child: ListView(children: const [
+                          DictionaryAutocomplete(),
+                          WordOfTheDay(),
+                        ]))))));
   }
 }

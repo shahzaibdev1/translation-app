@@ -476,281 +476,287 @@ class _TextScreenState extends State<TextScreen> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
-    return Scaffold(
-        drawer: const DrawerWidget(),
-        appBar: AppBar(
-          title: const Text("Translator"),
-          actions: [
-            IconButton(
-                onPressed: () async {
-                  await Provider.of<InterStitialAdProvider>(context, listen: false).openAd();
+    return GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Scaffold(
+            drawer: const DrawerWidget(),
+            appBar: AppBar(
+              title: const Text("Translator"),
+              actions: [
+                IconButton(
+                    onPressed: () async {
+                      // await Provider.of<InterStitialAdProvider>(context, listen: false).openAd();
 
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return Builder(
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
                           builder: (context) {
-                            return const Favorites();
+                            return Builder(
+                              builder: (context) {
+                                return const Favorites();
+                              },
+                            );
                           },
-                        );
-                      },
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.star_rounded),
-                iconSize: 30)
-          ],
-        ),
-        body: SingleChildScrollView(
-          child: SafeArea(
-              child: Column(
-            children: [
-              Card(
-                  elevation: 3,
-                  margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-                  child: Column(children: [
-                    Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              ConstrainedBox(
-                                constraints: BoxConstraints(
-                                    maxWidth: MediaQuery.of(context).size.width * 0.4),
-                                // width: MediaQuery.of(context).size.width * 0.35,
-                                child: FilledButton.icon(
-                                    clipBehavior: Clip.hardEdge,
-                                    style: ButtonStyle(
-                                        shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
-                                            RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(10))),
-                                        foregroundColor:
-                                            const MaterialStatePropertyAll(Colors.black),
-                                        backgroundColor:
-                                            MaterialStatePropertyAll(Colors.blue.shade200)),
-                                    onPressed: () => _showFrom(context),
-                                    label: Text(_selectedFromLang["name"]!,
-                                        overflow: TextOverflow.ellipsis),
-                                    icon: const Icon(Icons.arrow_drop_down)),
-                              ),
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.05,
-                                child: const Icon(Icons.chevron_right),
-                              ),
-
-                              ConstrainedBox(
-                                constraints: BoxConstraints(
-                                    maxWidth: MediaQuery.of(context).size.width * 0.4),
-                                // width: MediaQuery.of(context).size.width * 0.35,
-                                child: FilledButton.icon(
-                                    style: ButtonStyle(
-                                        // textStyle: MaterialStatePropertyAll(TextStyle(fontSize: 12)),
-                                        shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
-                                            RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(10))),
-                                        foregroundColor:
-                                            const MaterialStatePropertyAll(Colors.black),
-                                        backgroundColor:
-                                            MaterialStatePropertyAll(Colors.blue.shade200)),
-                                    onPressed: () => _showTo(context),
-                                    label: Text(_selectedToLang["name"]!,
-                                        overflow: TextOverflow.ellipsis),
-                                    icon: const Icon(Icons.arrow_drop_down)),
-                              ),
-                              // _buildToDropdown(),
-                            ])),
-                    const Divider(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      child: TextField(
-                        minLines: 4,
-                        maxLines: 6,
-                        controller: inputFieldController,
-                        style: const TextStyle(fontSize: 30),
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          labelStyle: TextStyle(fontSize: 20),
-                          labelText: "Enter text here",
                         ),
-                        onChanged: (value) {
-                          setState(() {
-                            isTextEmpty = value.isEmpty;
-                          });
-                        },
-                      ),
-                    ),
-                    Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        child: Row(
-                          mainAxisAlignment: inputFieldController.text != ""
-                              ? MainAxisAlignment.spaceBetween
-                              : MainAxisAlignment.end,
-                          children: [
-                            Visibility(
-                              // Use Visibility for conditional visibility
-                              visible: !isTextEmpty,
-                              child: IconButton.filled(
-                                onPressed: () => _startSpeaking(inputFieldController.text, "from"),
-                                icon: SvgPicture.asset(
-                                  "assets/images/speak.svg",
-                                  colorFilter: ColorFilter.mode(
-                                    theme.colorScheme.onPrimary,
-                                    BlendMode.srcIn,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                              IconButton.filled(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) {
-                                          return Builder(
-                                            builder: (context) {
-                                              return const TextRecognizerView();
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    );
-                                  },
-                                  icon: const Icon(Icons.camera_alt)),
-                              // IconButton.filled(
-                              //   onPressed:
-                              //       Provider.of<SpeachToTextProvider>(context).status == "listening"
-                              //           ? _stopListening
-                              //           : _startListening,
-                              //   icon: Transform.scale(
-                              //     scale: 1,
-                              //     child: Icon(Icons.mic),
-                              //   ),
-                              // ),
-                              // The InkWell wraps the custom flat button widget.
-                              Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                  child: RippleEffectContainer(
-                                    width: 40,
-                                    height: 40,
-                                    onTap: Provider.of<SpeechToTextProvider>(context).status ==
-                                            "listening"
-                                        ? _stopListening
-                                        : _startListening,
-                                    color: theme.colorScheme.primary,
-                                    isEnabled: Provider.of<SpeechToTextProvider>(context).status ==
-                                        "listening",
-                                    icon: Icon(Icons.mic, color: theme.colorScheme.onPrimary),
-                                    duration: const Duration(seconds: 1),
-                                  )),
-                              // IconButton.filled(
-                              // onPressed: Provider.of<SpeachToTextProvider>(context).status ==
-                              //         "listening"
-                              //     ? _stopListening
-                              //     : _startListening,
-                              // icon: Provider.of<SpeachToTextProvider>(context).status ==
-                              //         "listening"
-                              //     ? SizedBox(
-                              //         width: 20,
-                              //         height: 20,
-                              //         child: CircularProgressIndicator(
-                              //           color: theme.colorScheme.onPrimary,
-                              //         ))
-                              //     : const Icon(Icons.mic)),
-                              SizedBox(
-                                  width: 130,
-                                  // height: 20,
-                                  child: ElevatedButton(
-                                    onPressed: isLoading ? null : translateText,
-                                    style: ButtonStyle(
-                                        backgroundColor: isLoading
-                                            ? MaterialStateProperty.all<Color>(
-                                                theme.colorScheme.primary.withOpacity(0.5))
-                                            : MaterialStateProperty.all<Color>(
-                                                theme.colorScheme.primary),
-                                        foregroundColor: MaterialStateProperty.all<Color>(
-                                            theme.colorScheme.onPrimary)),
-                                    child: isLoading
-                                        ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                    horizontal: 2, vertical: 2),
-                                                child: CircularProgressIndicator(
-                                                  color: Colors.white,
-                                                  strokeWidth: 2,
-                                                )))
-                                        : const Text("Translate"),
-                                  ))
-                            ])
-                          ],
-                        ))
-                  ])),
-              Visibility(
-                  visible: _translatedText.isNotEmpty,
-                  child: Card(
-                    elevation: 2,
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
+                      );
+                    },
+                    icon: const Icon(Icons.star_rounded),
+                    iconSize: 30)
+              ],
+            ),
+            body: SingleChildScrollView(
+              child: SafeArea(
+                  child: Column(
+                children: [
+                  Card(
+                      elevation: 3,
+                      margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                      child: Column(children: [
                         Container(
-                          height: 250,
-                          width: MediaQuery.of(context).size.width,
-                          padding: const EdgeInsets.all(20),
-                          child: SingleChildScrollView(
-                            child: Text(
-                              _translatedText == "" ? "Translated text" : _translatedText,
-                              style: TextStyle(fontSize: 30, color: theme.colorScheme.primary),
+                            margin: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                        maxWidth: MediaQuery.of(context).size.width * 0.4),
+                                    // width: MediaQuery.of(context).size.width * 0.35,
+                                    child: FilledButton.icon(
+                                        clipBehavior: Clip.hardEdge,
+                                        style: ButtonStyle(
+                                            shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
+                                                RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(10))),
+                                            foregroundColor:
+                                                const MaterialStatePropertyAll(Colors.black),
+                                            backgroundColor:
+                                                MaterialStatePropertyAll(Colors.blue.shade200)),
+                                        onPressed: () => _showFrom(context),
+                                        label: Text(_selectedFromLang["name"]!,
+                                            overflow: TextOverflow.ellipsis),
+                                        icon: const Icon(Icons.arrow_drop_down)),
+                                  ),
+                                  SizedBox(
+                                    width: MediaQuery.of(context).size.width * 0.05,
+                                    child: const Icon(Icons.chevron_right),
+                                  ),
+
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                        maxWidth: MediaQuery.of(context).size.width * 0.4),
+                                    // width: MediaQuery.of(context).size.width * 0.35,
+                                    child: FilledButton.icon(
+                                        style: ButtonStyle(
+                                            // textStyle: MaterialStatePropertyAll(TextStyle(fontSize: 12)),
+                                            shape: MaterialStatePropertyAll<RoundedRectangleBorder>(
+                                                RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(10))),
+                                            foregroundColor:
+                                                const MaterialStatePropertyAll(Colors.black),
+                                            backgroundColor:
+                                                MaterialStatePropertyAll(Colors.blue.shade200)),
+                                        onPressed: () => _showTo(context),
+                                        label: Text(_selectedToLang["name"]!,
+                                            overflow: TextOverflow.ellipsis),
+                                        icon: const Icon(Icons.arrow_drop_down)),
+                                  ),
+                                  // _buildToDropdown(),
+                                ])),
+                        const Divider(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          child: TextField(
+                            minLines: 4,
+                            maxLines: 6,
+                            controller: inputFieldController,
+                            style: const TextStyle(fontSize: 30),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              labelStyle: TextStyle(fontSize: 20),
+                              labelText: "Enter text here",
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                isTextEmpty = value.isEmpty;
+                              });
+                            },
                           ),
                         ),
                         Container(
-                            margin: const EdgeInsets.only(left: 10, right: 10, bottom: 5),
-                            child:
-                                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                              _translatedText != ""
-                                  ? IconButton.filled(
-                                      onPressed: () => _startSpeaking(_translatedText, "to"),
-                                      icon: SvgPicture.asset(
-                                        "assets/images/speak.svg",
-                                        colorFilter: ColorFilter.mode(
-                                            theme.colorScheme.onPrimary, BlendMode.srcIn),
+                            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            child: Row(
+                              mainAxisAlignment: inputFieldController.text != ""
+                                  ? MainAxisAlignment.spaceBetween
+                                  : MainAxisAlignment.end,
+                              children: [
+                                Visibility(
+                                  // Use Visibility for conditional visibility
+                                  visible: !isTextEmpty,
+                                  child: IconButton.filled(
+                                    onPressed: () =>
+                                        _startSpeaking(inputFieldController.text, "from"),
+                                    icon: SvgPicture.asset(
+                                      "assets/images/speak.svg",
+                                      colorFilter: ColorFilter.mode(
+                                        theme.colorScheme.onPrimary,
+                                        BlendMode.srcIn,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                                  IconButton.filled(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) {
+                                              return Builder(
+                                                builder: (context) {
+                                                  return const TextRecognizerView();
+                                                },
+                                              );
+                                            },
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(Icons.camera_alt)),
+                                  // IconButton.filled(
+                                  //   onPressed:
+                                  //       Provider.of<SpeachToTextProvider>(context).status == "listening"
+                                  //           ? _stopListening
+                                  //           : _startListening,
+                                  //   icon: Transform.scale(
+                                  //     scale: 1,
+                                  //     child: Icon(Icons.mic),
+                                  //   ),
+                                  // ),
+                                  // The InkWell wraps the custom flat button widget.
+                                  Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      child: RippleEffectContainer(
+                                        width: 40,
+                                        height: 40,
+                                        onTap: Provider.of<SpeechToTextProvider>(context).status ==
+                                                "listening"
+                                            ? _stopListening
+                                            : _startListening,
+                                        color: theme.colorScheme.primary,
+                                        isEnabled:
+                                            Provider.of<SpeechToTextProvider>(context).status ==
+                                                "listening",
+                                        icon: Icon(Icons.mic, color: theme.colorScheme.onPrimary),
+                                        duration: const Duration(seconds: 1),
+                                      )),
+                                  // IconButton.filled(
+                                  // onPressed: Provider.of<SpeachToTextProvider>(context).status ==
+                                  //         "listening"
+                                  //     ? _stopListening
+                                  //     : _startListening,
+                                  // icon: Provider.of<SpeachToTextProvider>(context).status ==
+                                  //         "listening"
+                                  //     ? SizedBox(
+                                  //         width: 20,
+                                  //         height: 20,
+                                  //         child: CircularProgressIndicator(
+                                  //           color: theme.colorScheme.onPrimary,
+                                  //         ))
+                                  //     : const Icon(Icons.mic)),
+                                  SizedBox(
+                                      width: 130,
+                                      // height: 20,
+                                      child: ElevatedButton(
+                                        onPressed: isLoading ? null : translateText,
+                                        style: ButtonStyle(
+                                            backgroundColor: isLoading
+                                                ? MaterialStateProperty.all<Color>(
+                                                    theme.colorScheme.primary.withOpacity(0.5))
+                                                : MaterialStateProperty.all<Color>(
+                                                    theme.colorScheme.primary),
+                                            foregroundColor: MaterialStateProperty.all<Color>(
+                                                theme.colorScheme.onPrimary)),
+                                        child: isLoading
+                                            ? const SizedBox(
+                                                width: 20,
+                                                height: 20,
+                                                child: Padding(
+                                                    padding: EdgeInsets.symmetric(
+                                                        horizontal: 2, vertical: 2),
+                                                    child: CircularProgressIndicator(
+                                                      color: Colors.white,
+                                                      strokeWidth: 2,
+                                                    )))
+                                            : const Text("Translate"),
                                       ))
-                                  : const SizedBox.shrink(),
-                              Row(
-                                children: [
-                                  IconButton.filled(
-                                      onPressed: () {
-                                        addToFav();
-                                      },
-                                      icon: Icon(allFavs
-                                              .where((element) =>
-                                                  element["translation"] == _translatedText)
-                                              .isEmpty
-                                          ? Icons.star_border
-                                          : Icons.star)),
-                                  IconButton.filled(
-                                      onPressed: () {
-                                        copyText(_translatedText);
-                                      },
-                                      icon: const Icon(Icons.copy)),
-                                  IconButton.filled(
-                                      onPressed: () {
-                                        share(_translatedText);
-                                      },
-                                      icon: const Icon(Icons.share))
-                                ],
-                              )
-                            ]))
-                      ],
-                    ),
-                  ))
-            ],
-          )),
-        ));
+                                ])
+                              ],
+                            ))
+                      ])),
+                  Visibility(
+                      visible: _translatedText.isNotEmpty,
+                      child: Card(
+                        elevation: 2,
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          children: [
+                            Container(
+                              height: 250,
+                              width: MediaQuery.of(context).size.width,
+                              padding: const EdgeInsets.all(20),
+                              child: SingleChildScrollView(
+                                child: Text(
+                                  _translatedText == "" ? "Translated text" : _translatedText,
+                                  style: TextStyle(fontSize: 30, color: theme.colorScheme.primary),
+                                ),
+                              ),
+                            ),
+                            Container(
+                                margin: const EdgeInsets.only(left: 10, right: 10, bottom: 5),
+                                child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      _translatedText != ""
+                                          ? IconButton.filled(
+                                              onPressed: () =>
+                                                  _startSpeaking(_translatedText, "to"),
+                                              icon: SvgPicture.asset(
+                                                "assets/images/speak.svg",
+                                                colorFilter: ColorFilter.mode(
+                                                    theme.colorScheme.onPrimary, BlendMode.srcIn),
+                                              ))
+                                          : const SizedBox.shrink(),
+                                      Row(
+                                        children: [
+                                          IconButton.filled(
+                                              onPressed: () {
+                                                addToFav();
+                                              },
+                                              icon: Icon(allFavs
+                                                      .where((element) =>
+                                                          element["translation"] == _translatedText)
+                                                      .isEmpty
+                                                  ? Icons.star_border
+                                                  : Icons.star)),
+                                          IconButton.filled(
+                                              onPressed: () {
+                                                copyText(_translatedText);
+                                              },
+                                              icon: const Icon(Icons.copy)),
+                                          IconButton.filled(
+                                              onPressed: () {
+                                                share(_translatedText);
+                                              },
+                                              icon: const Icon(Icons.share))
+                                        ],
+                                      )
+                                    ]))
+                          ],
+                        ),
+                      ))
+                ],
+              )),
+            )));
   }
 
   Widget _buildDropdown() => DropdownButton(

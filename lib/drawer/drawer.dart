@@ -120,7 +120,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       builder: (context) {
                         return Builder(
                           builder: (context) {
-                            Provider.of<InterStitialAdProvider>(context, listen: false).openAd();
+                            // Provider.of<InterStitialAdProvider>(context, listen: false).openAd();
 
                             return const History();
                           },
