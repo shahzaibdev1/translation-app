@@ -1,16 +1,23 @@
-# translation_app
+# Translation App
 
-A new Flutter project.
+A Flutter Android app for translating typed text and text captured from a camera or gallery image. This repository contains the app UI and supporting mobile code.
 
-## Getting Started
+## What is in the app
 
-This project is a starting point for a Flutter application.
+- Text translation and conversation screens
+- Camera and gallery text recognition using Google ML Kit
+- Speech input and text-to-speech support
+- Dictionary, favorites, and translation history flows
+- Local storage using SQLite and shared preferences
 
-A few resources to get you started if this is your first Flutter project:
+## Tech
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Flutter / Dart, Google ML Kit text recognition, Provider, SQLite, camera, speech-to-text, and text-to-speech. See [pubspec.yaml](pubspec.yaml) for the complete dependency list.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Run locally
+
+1. Install Flutter with a Dart SDK compatible with the version range in pubspec.yaml.
+2. Run flutter pub get.
+3. Connect an Android device or start an emulator, then run flutter run.
+
+The repository is a code sample of the mobile implementation. Check external service configuration before using translation or ad-related features in your own environment.
